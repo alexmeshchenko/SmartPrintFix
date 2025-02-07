@@ -15,9 +15,9 @@ struct PDFProcessingState {
     var pdfDocument: PDFDocument?
     var selectedFileName: String?
     var isProcessing: Bool = false
-    var logMessages: [(id: UUID, message: String)] = []
-    
+    var logMessages: [LogEntry] = []
+
     mutating func addLog(_ message: String) {
-        logMessages.append((id: UUID(), message: message))
+        logMessages.append(LogEntry(message: message))
     }
 }

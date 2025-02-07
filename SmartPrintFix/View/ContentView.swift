@@ -82,15 +82,21 @@ struct ContentView: View {
                         return
                     }
                     state.isProcessing = true
-                    state.addLog("Processing started...")
                     
-                    var tempLog = state.logMessages.map { $0.message }
-                    let newDoc = await PDFProcessingService.processPDF(document: document, log: &tempLog)
-                    state.logMessages = tempLog.map { (id: UUID(), message: $0) } // Возвращаем в нужный формат
+                    // 1. Копируем состояние
+                    var localState = state
                     
-                    state.addLog("Processing completed.")
-                    state.isProcessing = false
-                    processedDocument = newDoc
+                    // 2. Запускаем обработку
+                    // В Swift 6 изменились правила работы с @State, @Published и @Binding.
+                    // Они теперь actor-isolated, что запрещает их передачу inout в async функции.
+                    let newDoc = await PDFProcessingService.processPDF(document: document, state: &localState)
+                    
+                    // 3. Обновляем `state` после выполнения
+                    DispatchQueue.main.async {
+                        state = localState
+                        processedDocument = newDoc
+                        state.isProcessing = false
+                    }
                 }
             }) {
                 HStack {
@@ -107,7 +113,7 @@ struct ContentView: View {
             ZStack(alignment: .bottomTrailing) {
                 ScrollView {
                     VStack(alignment: .leading) {
-                        ForEach(state.logMessages, id: \ .id) { logEntry in
+                        ForEach(state.logMessages) { logEntry in
                             Text(logEntry.message)
                                 .font(.caption)
                                 .foregroundColor(.gray)
