@@ -1,3 +1,13 @@
+//
+//  PDFKitView.swift
+//  SmartPrintFix
+//
+//  Created by Aleksandr Meshchenko on 06.02.25.
+//
+
+import SwiftUI
+import PDFKit
+
 struct PDFKitView: NSViewRepresentable {
     let document: PDFDocument
     
