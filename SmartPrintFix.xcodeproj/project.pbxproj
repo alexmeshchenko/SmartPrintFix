@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		799C96392D56C21E00FC09BA /* readme.md in Resources */ = {isa = PBXBuildFile; fileRef = 799C96382D56C21E00FC09BA /* readme.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		793BC36B2D54E04900512AAA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		793BC3592D54E04600512AAA /* SmartPrintFix.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartPrintFix.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		793BC36A2D54E04900512AAA /* SmartPrintFixTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SmartPrintFixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		793BC3742D54E04900512AAA /* SmartPrintFixUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SmartPrintFixUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		799C96382D56C21E00FC09BA /* readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = readme.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +80,7 @@
 		793BC3502D54E04600512AAA = {
 			isa = PBXGroup;
 			children = (
+				799C96382D56C21E00FC09BA /* readme.md */,
 				793BC35B2D54E04600512AAA /* SmartPrintFix */,
 				793BC36D2D54E04900512AAA /* SmartPrintFixTests */,
 				793BC3772D54E04900512AAA /* SmartPrintFixUITests */,
@@ -212,6 +218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				799C96392D56C21E00FC09BA /* readme.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

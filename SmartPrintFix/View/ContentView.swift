@@ -7,12 +7,14 @@
 
 import SwiftUI
 import PDFKit
-//import Vision
 
 struct ContentView: View {
     @State private var state = PDFProcessingState()
     @State private var showFilePicker = false
     @State private var processedDocument: PDFDocument?
+    
+    // Инициализируем сервис
+    private let pdfProcessingService = PDFProcessingService()
     
     var body: some View {
         VStack(spacing: 10) {
@@ -89,7 +91,10 @@ struct ContentView: View {
                     // 2. Запускаем обработку
                     // В Swift 6 изменились правила работы с @State, @Published и @Binding.
                     // Они теперь actor-isolated, что запрещает их передачу inout в async функции.
-                    let newDoc = await PDFProcessingService.processPDF(document: document, state: &localState)
+
+                    // 2. Запускаем обработку через инстанс сервиса
+                    let newDoc = await pdfProcessingService.processPDF(document: document,
+                                                                     state: &localState)
                     
                     // 3. Обновляем `state` после выполнения
                     DispatchQueue.main.async {

@@ -16,8 +16,21 @@ struct PDFProcessingState {
     var selectedFileName: String?
     var isProcessing: Bool = false
     var logMessages: [LogEntry] = []
-
-    mutating func addLog(_ message: String) {
-        logMessages.append(LogEntry(message: message))
+    
+    mutating func addLog(_ message: String, type: LogEntry.LogType = .info) {
+        logMessages.append(LogEntry(message: message, type: type))
+    }
+    
+    // Вспомогательные методы для разных типов логов
+    mutating func addError(_ message: String) {
+        addLog(message, type: .error)
+    }
+    
+    mutating func addWarning(_ message: String) {
+        addLog(message, type: .warning)
+    }
+    
+    mutating func addSuccess(_ message: String) {
+        addLog(message, type: .success)
     }
 }
