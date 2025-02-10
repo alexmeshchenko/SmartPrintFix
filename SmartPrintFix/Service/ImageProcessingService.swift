@@ -24,18 +24,20 @@ final class ImageProcessingService {
     
     // MARK: - Public Methods
     func invertDarkAreas(page: PDFPage) async -> CGImage? {
-        let image = page.thumbnail(of: page.bounds(for: .mediaBox).size, for: .mediaBox)
+        // Получаем изображение в максимальном качестве
+        let image = page.thumbnail(of: CGSize(
+            width: page.bounds(for: .mediaBox).width * 2,  // Увеличиваем разрешение
+            height: page.bounds(for: .mediaBox).height * 2
+        ), for: .mediaBox)
         
         guard let tiffData = image.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiffData),
               let cgImage = bitmap.cgImage else { return nil }
         
-        // получаем изображение из PDF
         return await detectAndInvertDarkRectangles(cgImage: cgImage)
     }
     
     // MARK: - Private Methods
-    
     private func detectAndInvertDarkRectangles(cgImage: CGImage) async -> CGImage? {
         return await withCheckedContinuation { continuation in
             let request = VNDetectRectanglesRequest { [weak self] request, error in
@@ -123,13 +125,22 @@ final class ImageProcessingService {
             try? handler.perform([request])
         }
     }
-    
     private func isAreaDark(_ image: CIImage) -> Bool {
-        guard let areaAverage = CIFilter(name: "CIAreaAverage") else {
+        guard let colorControls = CIFilter(name: "CIColorControls") else {
             return false
         }
         
-        areaAverage.setValue(image, forKey: kCIInputImageKey)
+        // Увеличим контраст для лучшего отделения темных областей
+        colorControls.setValue(image, forKey: kCIInputImageKey)
+        colorControls.setValue(1.5, forKey: "inputContrast")
+        colorControls.setValue(0.0, forKey: "inputSaturation")  // Уберем цвет
+        
+        guard let contrastImage = colorControls.outputImage,
+              let areaAverage = CIFilter(name: "CIAreaAverage") else {
+            return false
+        }
+        
+        areaAverage.setValue(contrastImage, forKey: kCIInputImageKey)
         areaAverage.setValue(CIVector(cgRect: image.extent), forKey: "inputExtent")
         
         guard let outputImage = areaAverage.outputImage,
@@ -141,9 +152,9 @@ final class ImageProcessingService {
         }
         
         let brightness = (0.299 * Double(bytes[0]) +
-                          0.587 * Double(bytes[1]) +
-                          0.114 * Double(bytes[2])) / 255.0
+                         0.587 * Double(bytes[1]) +
+                         0.114 * Double(bytes[2])) / 255.0
         
-        return brightness < 0.3
+        return brightness < 0.4  // Немного увеличим порог
     }
 }
