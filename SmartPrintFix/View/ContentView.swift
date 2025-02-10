@@ -14,7 +14,11 @@ struct ContentView: View {
     @State private var processedDocument: PDFDocument?
     
     // Инициализируем сервис
-    private let pdfProcessingService = PDFProcessingService()
+    private let pdfProcessingService: PDFProcessingServiceProtocol
+    
+    init(pdfProcessingService: PDFProcessingServiceProtocol = PDFProcessingService()) {
+        self.pdfProcessingService = pdfProcessingService
+    }
     
     var body: some View {
         VStack {

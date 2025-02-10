@@ -12,7 +12,8 @@ import AppKit
 
 /// Сервис для обработки изображений PDF
 /// В рамках MVSU архитектуры реализован как класс сервисного слоя
-final class ImageProcessingService {
+/// Сохраняем консистентность поведения с моком
+final class ImageProcessingService: ImageProcessingServiceProtocol {
     
     // MARK: - Properties
     private let context: CIContext
@@ -22,8 +23,16 @@ final class ImageProcessingService {
         self.context = context
     }
     
-    // MARK: - Public Methods
+    // MARK: - ImageProcessingServiceProtocol
     func invertDarkAreas(page: PDFPage) async -> CGImage? {
+        
+        // Проверяем входные данные
+        let bounds = page.bounds(for: .mediaBox)
+        if bounds.width <= 0 || bounds.height <= 0 {
+            NSLog("Invalid page dimensions: width = \(bounds.width), height = \(bounds.height)")
+            return nil
+        }
+        
         // Получаем изображение в максимальном качестве
         let image = page.thumbnail(of: CGSize(
             width: page.bounds(for: .mediaBox).width * 2,  // Увеличиваем разрешение
@@ -32,9 +41,45 @@ final class ImageProcessingService {
         
         guard let tiffData = image.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiffData),
-              let cgImage = bitmap.cgImage else { return nil }
-        
+              let cgImage = bitmap.cgImage else {
+            NSLog("Failed to create image from PDF page")
+            return nil // Явно возвращаем nil при ошибке
+        }
+        NSLog("Successfully created image from PDF page")
         return await detectAndInvertDarkRectangles(cgImage: cgImage)
+    }
+    
+    func isAreaDark(_ image: CIImage) -> Bool {
+        guard let colorControls = CIFilter(name: "CIColorControls") else {
+            return false
+        }
+        
+        // Увеличим контраст для лучшего отделения темных областей
+        colorControls.setValue(image, forKey: kCIInputImageKey)
+        colorControls.setValue(1.5, forKey: "inputContrast")
+        colorControls.setValue(0.0, forKey: "inputSaturation")  // Уберем цвет
+        
+        guard let contrastImage = colorControls.outputImage,
+              let areaAverage = CIFilter(name: "CIAreaAverage") else {
+            return false
+        }
+        
+        areaAverage.setValue(contrastImage, forKey: kCIInputImageKey)
+        areaAverage.setValue(CIVector(cgRect: image.extent), forKey: "inputExtent")
+        
+        guard let outputImage = areaAverage.outputImage,
+              let averageColor = context.createCGImage(outputImage, from: outputImage.extent),
+              let dataProvider = averageColor.dataProvider,
+              let data = dataProvider.data,
+              let bytes = CFDataGetBytePtr(data) else {
+            return false
+        }
+        
+        let brightness = (0.299 * Double(bytes[0]) +
+                         0.587 * Double(bytes[1]) +
+                         0.114 * Double(bytes[2])) / 255.0
+        
+        return brightness < 0.4  // Немного увеличим порог
     }
     
     // MARK: - Private Methods
@@ -78,34 +123,14 @@ final class ImageProcessingService {
                     
                     let croppedImage = ciImage.cropped(to: imageBox)
                     
-                    if isAreaDark(croppedImage) {
-                        // Создаем маску для этой области
-                        guard let whiteColor = CIFilter(name: "CIConstantColorGenerator") else { continue }
-                        whiteColor.setValue(CIColor(red: 1, green: 1, blue: 1), forKey: kCIInputColorKey)
-                        
-                        // Создаем прямоугольную маску
-                        let mask = whiteColor.outputImage?.cropped(to: imageBox)
-                        
-                        // Инвертируем всю область целиком
-                        if let invertFilter = CIFilter(name: "CIColorInvert") {
-                            invertFilter.setValue(croppedImage, forKey: kCIInputImageKey)
-                            
-                            if let invertedArea = invertFilter.outputImage {
-                                // Создаем смешивающий фильтр
-                                guard let blendFilter = CIFilter(name: "CIBlendWithMask") else { continue }
-                                
-                                // Настраиваем смешивание
-                                blendFilter.setValue(ciImage, forKey: kCIInputBackgroundImageKey)
-                                blendFilter.setValue(invertedArea, forKey: kCIInputImageKey)
-                                blendFilter.setValue(mask, forKey: kCIInputMaskImageKey)
-                                
-                                if let blendedImage = blendFilter.outputImage {
-                                    // Обновляем изображение
-                                    ciImage = blendedImage
-                                }
-                            }
-                        }
-                    }
+                    if self.isAreaDark(croppedImage) {
+                                            if let invertedArea = self.invertArea(croppedImage),
+                                               let blendedImage = self.blendArea(original: ciImage,
+                                                                               inverted: invertedArea,
+                                                                               in: imageBox) {
+                                                ciImage = blendedImage
+                                            }
+                                        }
                 }
                 
                 if let outputCGImage = self.context.createCGImage(ciImage, from: ciImage.extent) {
@@ -125,36 +150,27 @@ final class ImageProcessingService {
             try? handler.perform([request])
         }
     }
-    private func isAreaDark(_ image: CIImage) -> Bool {
-        guard let colorControls = CIFilter(name: "CIColorControls") else {
-            return false
+    
+    // MARK: - Helper Methods
+        
+        private func invertArea(_ image: CIImage) -> CIImage? {
+            guard let invertFilter = CIFilter(name: "CIColorInvert") else { return nil }
+            invertFilter.setValue(image, forKey: kCIInputImageKey)
+            return invertFilter.outputImage
         }
         
-        // Увеличим контраст для лучшего отделения темных областей
-        colorControls.setValue(image, forKey: kCIInputImageKey)
-        colorControls.setValue(1.5, forKey: "inputContrast")
-        colorControls.setValue(0.0, forKey: "inputSaturation")  // Уберем цвет
-        
-        guard let contrastImage = colorControls.outputImage,
-              let areaAverage = CIFilter(name: "CIAreaAverage") else {
-            return false
+        private func blendArea(original: CIImage, inverted: CIImage, in rect: CGRect) -> CIImage? {
+            guard let whiteColor = CIFilter(name: "CIConstantColorGenerator") else { return nil }
+            whiteColor.setValue(CIColor(red: 1, green: 1, blue: 1), forKey: kCIInputColorKey)
+            
+            guard let mask = whiteColor.outputImage?.cropped(to: rect),
+                  let blendFilter = CIFilter(name: "CIBlendWithMask") else { return nil }
+            
+            blendFilter.setValue(original, forKey: kCIInputBackgroundImageKey)
+            blendFilter.setValue(inverted, forKey: kCIInputImageKey)
+            blendFilter.setValue(mask, forKey: kCIInputMaskImageKey)
+            
+            return blendFilter.outputImage
         }
-        
-        areaAverage.setValue(contrastImage, forKey: kCIInputImageKey)
-        areaAverage.setValue(CIVector(cgRect: image.extent), forKey: "inputExtent")
-        
-        guard let outputImage = areaAverage.outputImage,
-              let averageColor = context.createCGImage(outputImage, from: outputImage.extent),
-              let dataProvider = averageColor.dataProvider,
-              let data = dataProvider.data,
-              let bytes = CFDataGetBytePtr(data) else {
-            return false
-        }
-        
-        let brightness = (0.299 * Double(bytes[0]) +
-                         0.587 * Double(bytes[1]) +
-                         0.114 * Double(bytes[2])) / 255.0
-        
-        return brightness < 0.4  // Немного увеличим порог
-    }
+    
 }
