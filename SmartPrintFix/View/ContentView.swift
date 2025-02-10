@@ -24,31 +24,14 @@ struct ContentView: View {
                 originalDocument: state.pdfDocument,
                 processedDocument: processedDocument,
                 onDropHandler: handleDrop,
-                isProcessing: state.isProcessing // Передаем состояние
-            )
-            
-            // Row of buttons
-            HStack(spacing: 20) {
-                // Кнопка выбора PDF
-                
-                Button(state.selectedFileName ?? "Select PDF") {
-                    if !FileAccessUtility.checkDownloadsAccess() {
-                        state.addLog("⚠️ No access to Downloads folder. Please grant permissions in System Preferences.")
+                isProcessing: state.isProcessing, // Передаем состояние
+                    onImport: { showFilePicker = true },
+                    onExport: {
+                        if let doc = processedDocument {
+                            savePDF(document: doc)
+                        }
                     }
-                    showFilePicker = true
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                
-                // Кнопка сохранения
-                Button("Save PDF") {
-                    guard let document = processedDocument else { return }
-                    savePDF(document: document)
-                }
-                .padding()
-                .disabled(processedDocument == nil)
-                .frame(maxWidth: .infinity)
-            }
+            )
             
             // Processing Log (Full Width)
             ProcessingLogView(logMessages: $state.logMessages)
@@ -56,6 +39,11 @@ struct ContentView: View {
         } // VStack
         .padding()
         .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.pdf]) { result in
+            if !FileAccessUtility.checkDownloadsAccess() {
+                state.addLog("⚠️ No access to Downloads folder. Please grant permissions in System Preferences.")
+                return
+            }
+            
             switch result {
             case .success(let url):
                 loadPDF(from: url)

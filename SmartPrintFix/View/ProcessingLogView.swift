@@ -23,7 +23,6 @@ struct ProcessingLogView: View {
                             Spacer()
                         }
                         .padding(.vertical, 2)
-                        .background(Color.white.opacity(0.5))
                         .cornerRadius(5)
                     }
                 }
