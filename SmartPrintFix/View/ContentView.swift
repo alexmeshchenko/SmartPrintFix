@@ -19,15 +19,15 @@ struct ContentView: View {
     var body: some View {
         VStack {
             
-            // 1. Row of document views
-            // Используем новый компонент PDFRowView
+            // PDFRowView
             PDFRowView(
                 originalDocument: state.pdfDocument,
                 processedDocument: processedDocument,
-                onDropHandler: handleDrop
+                onDropHandler: handleDrop,
+                isProcessing: state.isProcessing // Передаем состояние
             )
             
-            // 2. Row of buttons
+            // Row of buttons
             HStack(spacing: 20) {
                 // Кнопка выбора PDF
                 
@@ -50,20 +50,7 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity)
             }
             
-            // Кнопка обработки
-            // 3. Processing Button
-            Button(action: processPDF) {
-                HStack {
-                    if state.isProcessing {
-                        ProgressView()
-                    }
-                    Text("Process")
-                }
-            }
-            .padding()
-            .disabled(state.isProcessing)
-            
-            // 4. Processing Log (Full Width)
+            // Processing Log (Full Width)
             ProcessingLogView(logMessages: $state.logMessages)
             
         } // VStack
@@ -79,11 +66,15 @@ struct ContentView: View {
     }
     
     private func handleDrop(providers: [NSItemProvider]) -> Bool {
+        state.addLog("handleDrop called with \(providers.count) provider(s).", type: .info) // Логируем вызов функции
+        
         if let provider = providers.first {
+            state.addLog("Processing first provider...", type: .info) // Логируем, что начали обработку первого провайдера
             provider.loadItem(forTypeIdentifier: "public.file-url", options: nil) { (item, error) in
                 if let data = item as? Data,
                    let url = URL(dataRepresentation: data, relativeTo: nil) {
                     DispatchQueue.main.async {
+                        state.addLog("File dropped: \(url.lastPathComponent)", type: .info) // Логируем успешное получение файла
                         loadPDF(from: url)
                     }
                 } else {
@@ -92,14 +83,24 @@ struct ContentView: View {
             }
             return true
         }
+        state.addLog("No valid provider found for the drop.", type: .warning) // Логируем, если провайдеров нет
+
         return false
     }
     
     private func loadPDF(from url: URL) {
+        if state.isProcessing {
+            state.addLog("Processing already in progress. Please wait for it to complete.", type: .warning)
+            return
+        }
+        
         if let document = PDFDocument(url: url) {
             state.pdfDocument = document
             state.selectedFileName = url.lastPathComponent
             state.addLog("File loaded successfully: \(state.selectedFileName ?? "Unknown")")
+            
+            // Автоматически запускаем обработку после загрузки
+            processPDF()
         } else {
             state.addLog("Failed to load PDF file.", type: .error)
         }

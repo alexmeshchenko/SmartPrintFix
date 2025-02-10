@@ -29,6 +29,7 @@ struct ProcessingLogView: View {
                 }
                 .padding()
             }
+            .defaultScrollAnchor(.bottom)
             .frame(maxWidth: .infinity, maxHeight: 150)
             .background(Color.gray.opacity(0.1))
             .cornerRadius(10)
