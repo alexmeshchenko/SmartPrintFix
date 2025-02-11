@@ -1,0 +1,37 @@
+{
+  "configurations" : [
+    {
+      "id" : "80B07A85-A5B7-41C5-8A6D-B3DA6BA45F05",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:SmartPrintFix.xcodeproj",
+      "identifier" : "793BC3582D54E04600512AAA",
+      "name" : "SmartPrintFix"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:SmartPrintFix.xcodeproj",
+        "identifier" : "793BC3692D54E04900512AAA",
+        "name" : "SmartPrintFixTests"
+      }
+    },
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:SmartPrintFix.xcodeproj",
+        "identifier" : "793BC3732D54E04900512AAA",
+        "name" : "SmartPrintFixUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

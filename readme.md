@@ -1,64 +1,95 @@
+![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
+![macOS](https://img.shields.io/badge/macOS-14.0+-blue)
+![Swift](https://img.shields.io/badge/Swift-6.0-orange)
 # 🖨️ SmartPrintFix
 
 SmartPrintFix is a **macOS application** designed to **automatically process PDF documents before printing**.  
 It **inverts dark areas** in PDFs (e.g., code blocks with black backgrounds) to make them **more printer-friendly** on light backgrounds.
 
 ## 📌 Features
-✅ Load and preview PDF documents  
-✅ **Automatic processing** (invert dark areas for better printing)  
-✅ View **both original and processed PDFs** side by side  
-✅ Save processed PDFs  
-✅ Maintain a **processing log**  
+✅ Load and preview PDF documents,  
+✅ **Automatic processing** (invert dark areas for better printing),  
+✅ View **both original and processed PDFs** side by side,  
+✅ Save processed PDFs,  
+✅ Maintain a **processing log**,  
+✅ Drag and drop support,
+✅ Real-time processing status.
 
 ## 🏗️ Architecture (MVSU)
 The project follows the **Model-View-Service-Utility (MVSU)** architecture:
 
-
 📂 SmartPrintFix 
-├── 📂 Model # Manages application state 
-│   ├── PDFProcessingState.swift 
-│   ├── LogEntry.swift 
-├── 📂 View # UI (SwiftUI) 
-│   ├── ContentView.swift 
-│   ├── PDFKitView.swift 
-├── 📂 Service # PDF processing logic 
-│   ├── PDFProcessingService.swift 
-│   ├── ImageProcessingService.swift 
-├── 📂 Utility # Utility functions (permissions, file access, etc.) 
-│   ├── FileAccessUtility.swift 
+├── 📂 Model # Application state and data models
+│   ├── PDFProcessingState.swift # Processing state management
+│   ├── LogEntry.swift # Logging system model
+├── 📂 View # SwiftUI Interface
+│   ├── ContentView.swift # Main view container
+│   ├── PDFKitView.swift # PDF rendering view
+│   ├── PDFRowView.swift # PDF comparison view
+│   ├── ProcessingLogView.swift # Log display view
+├── 📂 Service # Core business logic
+│   ├── PDFProcessingService.swift # PDF document processing
+│   ├── ImageProcessingService.swift # Image analysis and conversion
+├── 📂 Utility # Support functions
+│   ├── FileAccessUtility.swift # File system operations
 │   ├── SmartPrintFixApp.swift # Application entry point
+├── 📂 Tests
+│   ├── ImageProcessingTests.swift # Image processing tests
+│   ├── PDFProcessingTests.swift # PDF processing tests
+│   ├── UITests # UI automation tests
 
+### Architecture Details
+- **Model**: Handles state management and data structures
+- **View**: SwiftUI-based user interface components
+- **Service**: Core business logic and processing
+- **Utility**: Helper functions and system interactions
+
+## 💻 System Requirements
+- macOS 14.0 (Sonoma) or later
+- Apple Silicon or Intel processor
+- Xcode 16+ for development
 
 ## 🚀 Installation
-1. Ensure you have **Xcode 16+** installed  
-2. Clone the repository:
-   ```sh
+1. Ensure your Mac meets the system requirements:
+   - macOS 14.0 or later
+   - Apple Silicon or Intel processor
+2. Install Xcode 16+ from the Mac App Store
+3. Clone the repository:
+   ```shell
    git clone https://github.com/yourusername/SmartPrintFix.git
-   cd SmartPrintFix
+   cd SmartPrintFix```
+4. Open SmartPrintFix.xcodeproj in Xcode
+5. Build and run the project on macOS
 
+## 🛠️ Technologies Used
+- Swift 6
+- SwiftUI (User Interface)
+- PDFKit (PDF handling)
+- Vision Framework (Image analysis)
+- XCTest (Testing)
 
-3. Open SmartPrintFix.xcodeproj in Xcode
-4. Build and run the project on macOS
+## 🧪 Testing
+The project includes comprehensive test coverage:
 
+- Unit tests for image processing
+- Unit tests for PDF processing
+- UI automation tests
+- Performance tests
 
-🛠️ Technologies Used
-Swift 6
-SwiftUI (User Interface)
-PDFKit (PDF handling)
-MVSU (Architectural pattern)
-
-📜 License
+## 📜 License
 This project is licensed under the MIT License.
 
-📸 Screenshots (Example UI)
+## 📸 Screenshots (Example UI)
 Original PDF    Processed PDF
 
-💡 Developer
+## 💡 Developer
 Author: [Your Name]
 Contact: [Your email or GitHub]
 
-📢 TODO (Future Plans)
+## 📢 Future Plans
 🔹 Dark mode support
 🔹 Add OCR to recognize text in code sections
 🔹 Integrate with Quick Look for previewing PDFs
-
+🔹 Batch processing support
+🔹 Processing presets
+🔹 Export/Import settings
