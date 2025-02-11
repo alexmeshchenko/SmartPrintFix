@@ -20,6 +20,8 @@ struct PDFProcessingState {
     /// Indicates if processing is in progress
     var isProcessing: Bool = false
     
+    var processedDocument: PDFDocument?
+    
     /// Processing history logs
     var logMessages: [LogEntry] = []
     

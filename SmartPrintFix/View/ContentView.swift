@@ -11,7 +11,6 @@ import PDFKit
 struct ContentView: View {
     @State private var state = PDFProcessingState()
     @State private var showFilePicker = false
-    @State private var processedDocument: PDFDocument?
     
     private let pdfProcessingService: PDFProcessingServiceProtocol
     
@@ -27,7 +26,7 @@ struct ContentView: View {
                 onDropHandler: handleDrop,
                 isProcessing: state.isProcessing, // Transfer state
                 onImport: { showFilePicker = true },
-                onExport: { exportProcessedDocument() }
+                onExport: { exportProcessedPDF() }
             )
             
             // Processing Log (Full Width)
@@ -35,68 +34,29 @@ struct ContentView: View {
             
         } // VStack
         .padding()
-        .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.pdf]) { result in
-            if !FileAccessUtility.checkDownloadsAccess() {
-                state.addLog("⚠️ No access to Downloads folder. Please grant permissions in System Preferences.")
-                return
-            }
-            
-            switch result {
-            case .success(let url):
-                loadPDF(from: url)
-            case .failure(let error):
-                state.addLog("Error selecting file: \(error.localizedDescription)")
-            }
-        }
+        .fileImporter(
+            isPresented: $showFilePicker,
+            allowedContentTypes: [.pdf],
+            onCompletion: handleFileImport
+        )
     }
     
-    private func handleDrop(providers: [NSItemProvider]) -> Bool {
-        state.addLog("handleDrop called with \(providers.count) provider(s).", type: .info) // Логируем вызов функции
-        
-        if let provider = providers.first {
-            state.addLog("Processing first provider...", type: .info) // Логируем, что начали обработку первого провайдера
-            provider.loadItem(forTypeIdentifier: "public.file-url", options: nil) { (item, error) in
-                if let data = item as? Data,
-                   let url = URL(dataRepresentation: data, relativeTo: nil) {
-                    DispatchQueue.main.async {
-                        state.addLog("File dropped: \(url.lastPathComponent)", type: .info) // Логируем успешное получение файла
-                        loadPDF(from: url)
-                    }
-                } else {
-                    state.addLog("Failed to process the dropped file.", type: .error)
-                }
-            }
-            return true
-        }
-        state.addLog("No valid provider found for the drop.", type: .warning) // Логируем, если провайдеров нет
-        
-        return false
+    private var processedDocument: PDFDocument? {
+        guard !state.isProcessing else { return nil }
+        return state.processedDocument
     }
     
-    private func loadPDF(from url: URL) {
-        if state.isProcessing {
-            state.addLog("Processing already in progress. Please wait for it to complete.", type: .warning)
+}
+
+// MARK: - PDF Processing
+private extension ContentView {
+    private func processPDF() {
+        guard let document = state.pdfDocument else {
+            state.addWarning("No PDF document loaded")
             return
         }
         
-        if let document = PDFDocument(url: url) {
-            state.pdfDocument = document
-            state.selectedFileName = url.lastPathComponent
-            state.addLog("File loaded successfully: \(state.selectedFileName ?? "Unknown")")
-            
-            // Автоматически запускаем обработку после загрузки
-            processPDF()
-        } else {
-            state.addLog("Failed to load PDF file.", type: .error)
-        }
-    }
-    
-    private func processPDF() {
         Task {
-            guard let document = state.pdfDocument else {
-                state.addLog("No PDF document loaded. Please select a file first.")
-                return
-            }
             state.isProcessing = true
             
             // 1. Копируем состояние
@@ -108,29 +68,92 @@ struct ContentView: View {
             let newDoc = await pdfProcessingService.processPDF(document: document, state: &localState)
             
             // 3. Обновляем `state` после выполнения
-            DispatchQueue.main.async {
+            await MainActor.run {
                 state = localState
-                processedDocument = newDoc
+                state.processedDocument = newDoc
                 state.isProcessing = false
             }
         }
     }
     
-    func exportProcessedDocument() {
-        guard let document = processedDocument else { return }
+}
+
+// MARK: - File Operations
+private extension ContentView {
+    
+    func handleFileImport(_ result: Result<URL, Error>) {
+        guard FileAccessUtility.checkDownloadsAccess() else {
+            state.addWarning("No access to Downloads folder")
+            return
+        }
+        
+        switch result {
+        case .success(let url):
+            loadPDF(from: url)
+        case .failure(let error):
+            state.addError("File selection failed: \(error.localizedDescription)")
+        }
+    }
+    
+    func handleDrop(providers: [NSItemProvider]) -> Bool {
+        guard let provider = providers.first else {
+            state.addWarning("Invalid file provided")
+            return false
+        }
+        
+        provider.loadItem(forTypeIdentifier: "public.file-url", options: nil) { item, error in
+            guard let data = item as? Data,
+                  let url = URL(dataRepresentation: data, relativeTo: nil) else {
+                Task { @MainActor in
+                    state.addError("Invalid dropped file")
+                }
+                return
+            }
+            
+            Task { @MainActor in
+                loadPDF(from: url)
+            }
+        }
+        return true
+    }
+    
+    func loadPDF(from url: URL) {
+        guard !state.isProcessing else {
+            state.addWarning("Processing in progress")
+            return
+        }
+        
+        guard let document = PDFDocument(url: url) else {
+            state.addError("Failed to load PDF")
+            return
+        }
+        
+        state.pdfDocument = document
+        state.selectedFileName = url.lastPathComponent
+        state.addSuccess("Loaded \(url.lastPathComponent)")
+        
+        // Automatically start processing after boot
+        processPDF()
+    }
+    
+    func exportProcessedPDF() {
+        guard let document = processedDocument else {
+            state.addWarning("No processed document available")
+            return
+        }
         
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.pdf]
-        savePanel.nameFieldStringValue = "processed.pdf"
+        savePanel.nameFieldStringValue = "processed_\(state.selectedFileName ?? "document").pdf"
         
         savePanel.begin { response in
             guard response == .OK, let url = savePanel.url else {
-                state.addLog("Save cancelled")
+                state.addWarning("Export cancelled")
                 return
             }
             
             document.write(to: url)
-            state.addLog("Saved: \(url.lastPathComponent)")
+            state.addSuccess("Exported to \(url.lastPathComponent)")
         }
     }
 }
