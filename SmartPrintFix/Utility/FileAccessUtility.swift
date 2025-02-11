@@ -8,20 +8,29 @@
 
 import Foundation
 
+/// Utility for handling file system access operations
 class FileAccessUtility {
+    /// Checks if the app has write access to Downloads directory
+    /// - Returns: True if the app can write to Downloads directory
     static func checkDownloadsAccess() -> Bool {
-        let testFile = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("test_access.txt")
-        
-        if let testFile = testFile {
+            guard let downloadsURL = FileManager.default.urls(
+                for: .downloadsDirectory,
+                in: .userDomainMask
+            ).first else { return false }
+            
+            let testFileURL = downloadsURL.appendingPathComponent(
+                "smartprintfix_test_\(UUID().uuidString).tmp"
+            )
+            
+            defer {
+                try? FileManager.default.removeItem(at: testFileURL)
+            }
+            
             do {
-                try "Test".write(to: testFile, atomically: true, encoding: .utf8)
-                try FileManager.default.removeItem(at: testFile) // Удаляем тестовый файл
+                try Data().write(to: testFileURL, options: .atomic)
                 return true
             } catch {
-                return false // Нет доступа
+                return false
             }
         }
-        return false
-    }
 }

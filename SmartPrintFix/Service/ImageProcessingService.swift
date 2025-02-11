@@ -10,59 +10,48 @@ import CoreGraphics
 import PDFKit
 import AppKit
 
-/// Сервис для обработки изображений PDF
-/// В рамках MVSU архитектуры реализован как класс сервисного слоя
-/// Сохраняем консистентность поведения с моком
+/// Service for processing PDF images with dark area detection and inversion
 final class ImageProcessingService: ImageProcessingServiceProtocol {
-    
-    // MARK: - Properties
     private let context: CIContext
+    private static let minAreaSize = 0.05
     
-    // MARK: - Initialization
     init(context: CIContext = CIContext()) {
         self.context = context
     }
     
     // MARK: - ImageProcessingServiceProtocol
     func invertDarkAreas(page: PDFPage) async -> CGImage? {
-        
-        // Проверяем входные данные
-        let bounds = page.bounds(for: .mediaBox)
-        if bounds.width <= 0 || bounds.height <= 0 {
-            NSLog("Invalid page dimensions: width = \(bounds.width), height = \(bounds.height)")
-            return nil
-        }
-        
-        // Получаем изображение в максимальном качестве
-        let image = page.thumbnail(of: CGSize(
-            width: page.bounds(for: .mediaBox).width * 2,  // Увеличиваем разрешение
-            height: page.bounds(for: .mediaBox).height * 2
-        ), for: .mediaBox)
-        
-        guard let tiffData = image.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData),
-              let cgImage = bitmap.cgImage else {
-            NSLog("Failed to create image from PDF page")
-            return nil // Явно возвращаем nil при ошибке
-        }
-        NSLog("Successfully created image from PDF page")
+        guard let cgImage = pdfPageToCGImage(page) else { return nil }
         return await detectAndInvertDarkRectangles(cgImage: cgImage)
     }
     
-    func isAreaDark(_ image: CIImage) -> Bool {
-        guard let colorControls = CIFilter(name: "CIColorControls") else {
-            return false
-        }
+    func pdfPageToCGImage(_ page: PDFPage) -> CGImage? {
+        // Check the input
+        let bounds = page.bounds(for: .mediaBox)
+        guard bounds.width > 0, bounds.height > 0 else { return nil }
         
-        // Увеличим контраст для лучшего отделения темных областей
+        // Get maximum quality image
+        let image = page.thumbnail(of: CGSize(
+            width: bounds.width * 2, // Increase resolution
+            height: bounds.height * 2
+        ), for: .mediaBox)
+        
+        guard let tiffData = image.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData) else { return nil }
+        
+        return bitmap.cgImage
+    }
+    
+    func isAreaDark(_ image: CIImage) -> Bool {
+        guard let colorControls = CIFilter(name: "CIColorControls"),
+              let areaAverage = CIFilter(name: "CIAreaAverage") else { return false }
+        
+        // Increase contrast for better separation of dark areas
         colorControls.setValue(image, forKey: kCIInputImageKey)
         colorControls.setValue(1.5, forKey: "inputContrast")
-        colorControls.setValue(0.0, forKey: "inputSaturation")  // Уберем цвет
+        colorControls.setValue(0.0, forKey: "inputSaturation") // Remove color
         
-        guard let contrastImage = colorControls.outputImage,
-              let areaAverage = CIFilter(name: "CIAreaAverage") else {
-            return false
-        }
+        guard let contrastImage = colorControls.outputImage else { return false }
         
         areaAverage.setValue(contrastImage, forKey: kCIInputImageKey)
         areaAverage.setValue(CIVector(cgRect: image.extent), forKey: "inputExtent")
@@ -76,10 +65,10 @@ final class ImageProcessingService: ImageProcessingServiceProtocol {
         }
         
         let brightness = (0.299 * Double(bytes[0]) +
-                         0.587 * Double(bytes[1]) +
-                         0.114 * Double(bytes[2])) / 255.0
+                          0.587 * Double(bytes[1]) +
+                          0.114 * Double(bytes[2])) / 255.0
         
-        return brightness < Self.darknessTreshold  // Немного увеличим порог
+        return brightness < Self.darknessTreshold
     }
     
     // MARK: - Private Methods
@@ -104,33 +93,27 @@ final class ImageProcessingService: ImageProcessingServiceProtocol {
                 
                 var ciImage = CIImage(cgImage: cgImage)
                 
-                // Фильтруем и обрабатываем только достаточно большие тёмные области
+                // Filter and process only large enough dark areas
                 for observation in observations {
                     let box = observation.boundingBox
                     
-                    // Пропускаем слишком маленькие области
+                    // Miss too small areas
                     let minArea = 0.05
                     if (box.width * box.height) < minArea {
                         continue
                     }
                     
-                    let imageBox = CGRect(
-                        x: box.origin.x * ciImage.extent.width,
-                        y: box.origin.y * ciImage.extent.height,
-                        width: box.width * ciImage.extent.width,
-                        height: box.height * ciImage.extent.height
-                    )
-                    
+                    let imageBox = observation.boundingBox.scaled(to: ciImage.extent)
                     let croppedImage = ciImage.cropped(to: imageBox)
                     
                     if self.isAreaDark(croppedImage) {
-                                            if let invertedArea = self.invertArea(croppedImage),
-                                               let blendedImage = self.blendArea(original: ciImage,
-                                                                               inverted: invertedArea,
-                                                                               in: imageBox) {
-                                                ciImage = blendedImage
-                                            }
-                                        }
+                        if let invertedArea = self.invertArea(croppedImage),
+                           let blendedImage = self.blendArea(original: ciImage,
+                                                             inverted: invertedArea,
+                                                             in: imageBox) {
+                            ciImage = blendedImage
+                        }
+                    }
                 }
                 
                 if let outputCGImage = self.context.createCGImage(ciImage, from: ciImage.extent) {
@@ -140,37 +123,58 @@ final class ImageProcessingService: ImageProcessingServiceProtocol {
                 }
             }
             
-            // Настраиваем параметры поиска прямоугольников
-            request.minimumAspectRatio = 0.3
-            request.maximumAspectRatio = 3.0
-            request.minimumSize = 0.1
-            request.maximumObservations = 10
+            // Configure the search box settings
+            configureRectangleRequest(request)
             
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            try? handler.perform([request])
+            try? VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
         }
     }
     
-    // MARK: - Helper Methods
-        
-        private func invertArea(_ image: CIImage) -> CIImage? {
-            guard let invertFilter = CIFilter(name: "CIColorInvert") else { return nil }
-            invertFilter.setValue(image, forKey: kCIInputImageKey)
-            return invertFilter.outputImage
-        }
-        
-        private func blendArea(original: CIImage, inverted: CIImage, in rect: CGRect) -> CIImage? {
-            guard let whiteColor = CIFilter(name: "CIConstantColorGenerator") else { return nil }
-            whiteColor.setValue(CIColor(red: 1, green: 1, blue: 1), forKey: kCIInputColorKey)
-            
-            guard let mask = whiteColor.outputImage?.cropped(to: rect),
-                  let blendFilter = CIFilter(name: "CIBlendWithMask") else { return nil }
-            
-            blendFilter.setValue(original, forKey: kCIInputBackgroundImageKey)
-            blendFilter.setValue(inverted, forKey: kCIInputImageKey)
-            blendFilter.setValue(mask, forKey: kCIInputMaskImageKey)
-            
-            return blendFilter.outputImage
-        }
+}
+
+// MARK: - Helpers
+private extension ImageProcessingService {
     
+    private func invertArea(_ image: CIImage) -> CIImage? {
+        guard let invertFilter = CIFilter(name: "CIColorInvert") else { return nil }
+        invertFilter.setValue(image, forKey: kCIInputImageKey)
+        return invertFilter.outputImage
+    }
+    
+    private func blendArea(original: CIImage, inverted: CIImage, in rect: CGRect) -> CIImage? {
+        guard let whiteColor = CIFilter(name: "CIConstantColorGenerator"),
+              let blendFilter = CIFilter(name: "CIBlendWithMask") else { return nil }
+        
+        whiteColor.setValue(CIColor(red: 1, green: 1, blue: 1), forKey: kCIInputColorKey)
+        
+        guard let mask = whiteColor.outputImage?.cropped(to: rect) else { return nil }
+        
+        blendFilter.setValue(original, forKey: kCIInputBackgroundImageKey)
+        blendFilter.setValue(inverted, forKey: kCIInputImageKey)
+        blendFilter.setValue(mask, forKey: kCIInputMaskImageKey)
+        
+        return blendFilter.outputImage
+    }
+    
+    private func configureRectangleRequest(_ request: VNDetectRectanglesRequest) {
+        request.minimumAspectRatio = 0.3
+        request.maximumAspectRatio = 3.0
+        request.minimumSize = 0.1
+        request.maximumObservations = 10
+    }
+    
+}
+
+// MARK: - Helpers
+private extension CGRect {
+    var area: CGFloat { width * height }
+    
+    func scaled(to rect: CGRect) -> CGRect {
+        CGRect(
+            x: origin.x * rect.width,
+            y: origin.y * rect.height,
+            width: width * rect.width,
+            height: height * rect.height
+        )
+    }
 }

@@ -11,7 +11,8 @@ import Testing
 import PDFKit
 
 struct ImageProcessingTests {
-    // Тесты для ImageProcessingService
+    
+    // Tests for ImageProcessingService
     @Test
     func testImageProcessing() async throws {
         // Given
@@ -33,18 +34,18 @@ struct ImageProcessingTests {
         #expect(processedDocument.pageCount > 0, "Processed document should have pages")
         #expect(mockImageService.providedPage != nil, "Service should receive a page to process")
         
-        // Дополнительные проверки
+        // Additional checks
         #expect(mockImageService.isAreaDarkCalled, "Dark area detection should be performed")
         #expect(state.logMessages.contains { $0.type == .success }, "Should have success log entry")
         
     }
     
-    // тест для случая ошибки:
+    // error test:
     @Test
     func testImageProcessingWithError() async throws {
         // Given
         let mockImageService = MockImageProcessingService()
-        mockImageService.shouldReturnNil = true // Симулируем ошибку обработки
+        mockImageService.shouldReturnNil = true // Simulate processing error
         let processingService = PDFProcessingService(imageProcessingService: mockImageService)
         
         // When
@@ -63,7 +64,7 @@ struct ImageProcessingTests {
         #expect(state.logMessages.contains { $0.type == .error }, "Should have error log entry")
     }
     
-    // тест для обработки большого изображения
+    // large image processing test
     @Test
     func testLargeImageProcessing() async throws {
         // Given
@@ -80,7 +81,7 @@ struct ImageProcessingTests {
         #expect(result != nil, "Should successfully process large image")
         #expect(mockImageService.providedPage === pdfPage, "Should process the correct page")
         
-        // Проверяем размеры результата
+        // Check the result dimensions
         if let cgImage = result {
             #expect(cgImage.width == 1000, "Processed image should maintain original width")
             #expect(cgImage.height == 1000, "Processed image should maintain original height")
@@ -89,12 +90,12 @@ struct ImageProcessingTests {
     }
     
     // MARK: - Tests
-    // инверсия изображения выполняется и результат не nil.
+    // image inversion is running and the result is not nil.
     @Test
     func testInvertDarkAreas() async throws {
         // Given
         let mockImageService = MockImageProcessingService()
-        // Настраиваем размер и характеристики тестового изображения напрямую в моке
+        // Adjust the size and performance of the test image directly in the mock
         mockImageService.imageSize = CGSize(width: 100, height: 100)
         mockImageService.bitsPerComponent = 8
         
@@ -108,7 +109,7 @@ struct ImageProcessingTests {
         #expect(result != nil, "The inverted image should not be nil")
         #expect(mockImageService.providedPage === pdfPage, "The service should process the provided page")
         
-        // Дополнительные проверки размеров результирующего изображения
+        // Additional checks for the size of the resulting image
         if let cgImage = result {
             #expect(cgImage.width == 100, "Image should maintain configured width")
             #expect(cgImage.height == 100, "Image should maintain configured height")
@@ -131,12 +132,12 @@ struct ImageProcessingTests {
         #expect(result == nil, "Should return nil when shouldReturnNil is true")
     }
     
-    // случай ошибки при создании изображения
+    // test the error case when creating a picture
     @Test
     func testInvertDarkAreasWithInvalidImage() async {
         // Given
         let mockImageService = MockImageProcessingService()
-        // Устанавливаем некорректные размеры изображения
+        // Set image size to incorrect
         mockImageService.imageSize = CGSize(width: -1, height: -1)
         let pdfPage = PDFPage()
         
@@ -154,7 +155,7 @@ struct ImageProcessingTests {
     func testInvertDarkAreasWithBlackImage() async throws {
         // Given
         let mockImageService = MockImageProcessingService()
-        // Задаем небольшой размер для черного изображения
+        // Set small size for black image
         mockImageService.imageSize = CGSize(width: 50, height: 50)
         mockImageService.bitsPerComponent = 8
         
@@ -170,12 +171,12 @@ struct ImageProcessingTests {
         #expect(mockImageService.providedPage === pdfPage, "Should process the provided page")
     }
     
-    // тест, проверяющий обработку ошибочного случая:
+    // test to check the error case handling:
     @Test
     func testInvertDarkAreasWithFailure() async throws {
         // Given
         let mockImageService = MockImageProcessingService()
-        mockImageService.shouldReturnNil = true  // Имитируем ошибку
+        mockImageService.shouldReturnNil = true  // Simulate error
         let pdfPage = PDFPage()
         
         // When
@@ -185,9 +186,7 @@ struct ImageProcessingTests {
         #expect(mockImageService.invertDarkAreasCalled, "Method should be called even if it fails")
         #expect(result == nil, "The result should be nil when processing fails")
         #expect(mockImageService.providedPage === pdfPage, "Page should be saved even if processing fails")
-        
     }
-    
     
     @Test
     func testProcessPDFWithFailure() async throws {

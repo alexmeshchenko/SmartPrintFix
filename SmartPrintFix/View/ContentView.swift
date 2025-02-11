@@ -13,7 +13,6 @@ struct ContentView: View {
     @State private var showFilePicker = false
     @State private var processedDocument: PDFDocument?
     
-    // Инициализируем сервис
     private let pdfProcessingService: PDFProcessingServiceProtocol
     
     init(pdfProcessingService: PDFProcessingServiceProtocol = PDFProcessingService()) {
@@ -22,19 +21,13 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            
-            // PDFRowView
             PDFRowView(
                 originalDocument: state.pdfDocument,
                 processedDocument: processedDocument,
                 onDropHandler: handleDrop,
-                isProcessing: state.isProcessing, // Передаем состояние
-                    onImport: { showFilePicker = true },
-                    onExport: {
-                        if let doc = processedDocument {
-                            savePDF(document: doc)
-                        }
-                    }
+                isProcessing: state.isProcessing, // Transfer state
+                onImport: { showFilePicker = true },
+                onExport: { exportProcessedDocument() }
             )
             
             // Processing Log (Full Width)
@@ -76,7 +69,7 @@ struct ContentView: View {
             return true
         }
         state.addLog("No valid provider found for the drop.", type: .warning) // Логируем, если провайдеров нет
-
+        
         return false
     }
     
@@ -123,18 +116,21 @@ struct ContentView: View {
         }
     }
     
-    func savePDF(document: PDFDocument) {
+    func exportProcessedDocument() {
+        guard let document = processedDocument else { return }
+        
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.pdf]
         savePanel.nameFieldStringValue = "processed.pdf"
         
         savePanel.begin { response in
-            if response == .OK, let url = savePanel.url {
-                document.write(to: url)
-                state.addLog("File saved: \(url.lastPathComponent)")
-            } else {
-                state.addLog("File saving canceled.")
+            guard response == .OK, let url = savePanel.url else {
+                state.addLog("Save cancelled")
+                return
             }
+            
+            document.write(to: url)
+            state.addLog("Saved: \(url.lastPathComponent)")
         }
     }
 }

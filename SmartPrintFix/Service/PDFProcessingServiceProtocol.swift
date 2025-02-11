@@ -7,47 +7,35 @@
 
 import PDFKit
 
-/// Протокол сервиса обработки PDF документов
+/// Protocol for PDF processing service
 protocol PDFProcessingServiceProtocol {
-    /// Обрабатывает PDF документ, инвертируя темные области
+    /// Processes PDF document and inverts dark areas
     /// - Parameters:
-    ///   - document: Исходный PDF документ для обработки
-    ///   - state: Состояние обработки, включающее логи
-    /// - Returns: Обработанный PDF документ
+    ///   - document: Source PDF document
+    ///   - state: Processing state with logs
+    /// - Returns: Processed document or empty if processing failed
     ///
-    /// Гарантии:
-    /// - Возвращает пустой документ если:
-    ///   - входной документ пуст (pageCount == 0)
-    ///   - не удалось обработать ни одну страницу
-    /// - Логирует все этапы обработки через state:
-    ///   - .info для информационных сообщений
-    ///   - .warning для предупреждений (пропуск страниц, пустой документ)
-    ///   - .error для ошибок обработки
-    ///   - .success при успешном завершении
-    /// - Сохраняет порядок страниц
-    /// - Потокобезопасен
+    /// Guarantees:
+    /// - Returns empty document if input is empty or processing failed
+    /// - Logs all steps via state (.info, .warning, .error, .success)
+    /// - Preserves page order
+    /// - Thread-safe
     func processPDF(document: PDFDocument, state: inout PDFProcessingState) async -> PDFDocument
     
-    /// Обрабатывает одну страницу PDF
-        /// - Parameters:
-        ///   - page: Страница для обработки
-        ///   - state: Состояние обработки
-        /// - Returns: Обработанная страница или nil в случае ошибки
+    /// Processes single PDF page
+    /// - Returns: Processed page or nil if failed
     func processPage(_ page: PDFPage, pageNumber: Int, state: inout PDFProcessingState) async -> PDFPage?
-//
-//        /// Проверяет, требует ли документ обработки
-//        /// - Parameter document: PDF документ для проверки
-//        /// - Returns: true если документ требует обработки
-//        func requiresProcessing(_ document: PDFDocument) -> Bool
-        
-        /// Валидирует документ перед обработкой
-        /// - Parameter document: PDF документ для валидации
-        /// - Returns: true если документ валиден для обработки
-        func validateDocument(_ document: PDFDocument) -> Bool
+    //
+    //        /// Проверяет, требует ли документ обработки
+    //        /// - Parameter document: PDF документ для проверки
+    //        /// - Returns: true если документ требует обработки
+    //        func requiresProcessing(_ document: PDFDocument) -> Bool
+    
+    /// Validates document before processing
+    func validateDocument(_ document: PDFDocument) -> Bool
 }
 
 extension PDFProcessingServiceProtocol {
-    /// Минимальное количество успешно обработанных страниц для считания документа обработанным
     var minProcessedPagesCount: Int { 1 }
     
     func validateDocument(_ document: PDFDocument) -> Bool {

@@ -11,18 +11,19 @@ import Testing
 import PDFKit
 
 struct PDFProcessingTests {
-    //после обработки документ не пуст.
+    
+    //Check if the document is not empty after processing.
     @Test
     func testProcessPDF() async throws {
         // Given
         let mockPDFService = MockPDFProcessingService()
         let inputDocument = PDFDocument()
-        inputDocument.insert(PDFPage(), at: 0)  // Добавляем страницу во входной документ
+        inputDocument.insert(PDFPage(), at: 0)  // Add page to input document
         
         let resultDocument = PDFDocument()
         let processedPage = PDFPage()
         resultDocument.insert(processedPage, at: 0)
-        mockPDFService.stubbedResult = resultDocument  // Устанавливаем ожидаемый результат
+        mockPDFService.stubbedResult = resultDocument  // Set expected result
         
         var state = PDFProcessingState()
         
@@ -35,13 +36,13 @@ struct PDFProcessingTests {
         // Then
         #expect(mockPDFService.processPDFCalled, "PDF processing should be called")
         #expect(processedDocument.pageCount > 0, "Processed document should not be empty")
-        #expect(mockPDFService.providedDocument === inputDocument, "Service should process the provided document") // проверки идентичности объектов
+        #expect(mockPDFService.providedDocument === inputDocument, "Service should process the provided document") // object identity checks
         
-        // Проверяем лог обработки
-        #expect(state.logMessages.contains { $0.type == .success }, "Should have success log entry") // Проверяем конкретные типы логов
+        // Check the log
+        #expect(state.logMessages.contains { $0.type == .success }, "Should have success log entry") // Check specific types of logs
     }
     
-    // для проверки обработки пустого документа:
+    // to check the processing of a blank document:
     @Test
     func testProcessEmptyPDF() async throws {
         // Given
@@ -56,9 +57,9 @@ struct PDFProcessingTests {
         )
         
         // Then
-        #expect(mockPDFService.processPDFCalled, "Processing should be called even for empty document") // Проверка обработки пустого документа
+        #expect(mockPDFService.processPDFCalled, "Processing should be called even for empty document") // Checking the empty document processing
         #expect(processedDocument.pageCount == 0, "Processed empty document should remain empty")
-        #expect(state.logMessages.contains { $0.type == .warning }, "Should have warning log for empty document") // Проверка корректности логирования предупреждений
+        #expect(state.logMessages.contains { $0.type == .warning }, "Should have warning log for empty document") // Checking the correctness of the warning logic
     }
     
     @Test

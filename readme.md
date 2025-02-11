@@ -2,9 +2,8 @@
 ![macOS](https://img.shields.io/badge/macOS-14.0+-blue)
 ![Swift](https://img.shields.io/badge/Swift-6.0-orange)
 # 🖨️ SmartPrintFix
-
-SmartPrintFix is a **macOS application** designed to **automatically process PDF documents before printing**.  
-It **inverts dark areas** in PDFs (e.g., code blocks with black backgrounds) to make them **more printer-friendly** on light backgrounds.
+SmartPrintFix is a **macOS application** that **automatically processes PDF documents before printing**.  
+It **inverts dark areas** in PDFs (such as code blocks with dark backgrounds) to make them **more printer-friendly** when printing on light paper.
 
 ## 📌 Features
 ✅ Load and preview PDF documents,  

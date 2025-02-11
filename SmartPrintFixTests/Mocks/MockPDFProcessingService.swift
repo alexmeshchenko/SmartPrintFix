@@ -7,7 +7,7 @@
 
 import PDFKit
 import CoreImage
-@testable import SmartPrintFix  // Добавляем импорт тестируемого модуля
+@testable import SmartPrintFix
 
 final class MockPDFProcessingService: PDFProcessingServiceProtocol {
     // MARK: - Test Properties
@@ -26,7 +26,7 @@ final class MockPDFProcessingService: PDFProcessingServiceProtocol {
         processPDFCalled = true
         providedDocument = document
         
-        // Добавляем специальную обработку пустого документа
+        // Add special processing of empty document
         guard validateDocument(document) else {
              state.addLog("Processing empty document.", type: .warning)
              return PDFDocument()
@@ -37,7 +37,7 @@ final class MockPDFProcessingService: PDFProcessingServiceProtocol {
             return PDFDocument()
         }
         
-        // Имитируем логирование реального сервиса
+        // Simulate the real service logging
         state.addLog("Processing started...")
         
         var processedPagesCount = 0
@@ -49,7 +49,7 @@ final class MockPDFProcessingService: PDFProcessingServiceProtocol {
              }
          }
         
-        // Используем minProcessedPagesCount из extension
+        // Using minProcessedPagesCount from extension
         if processedPagesCount < minProcessedPagesCount {
             state.addLog("No pages were processed successfully.", type: .error)
             return PDFDocument()

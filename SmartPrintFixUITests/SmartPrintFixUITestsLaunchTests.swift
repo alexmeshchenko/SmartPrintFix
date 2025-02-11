@@ -22,13 +22,13 @@ final class SmartPrintFixUITestsLaunchTests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        // Делаем скриншот
+        // Make a screenshot
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "Launch Screen"
         attachment.lifetime = .keepAlways
         add(attachment)
         
-        // Восстанавливаем Light Mode
+        // Restore Light Mode
         if let script = NSAppleScript(source: "tell application \"System Events\" to tell appearance preferences to set dark mode to false") {
             var error: NSDictionary?
             script.executeAndReturnError(&error)

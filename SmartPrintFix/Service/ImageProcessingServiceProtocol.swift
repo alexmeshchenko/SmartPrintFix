@@ -9,33 +9,33 @@ import CoreGraphics
 import CoreImage
 import PDFKit
 
-/// Протокол сервиса обработки изображений
+/// Image Processing Service Protocol
 protocol ImageProcessingServiceProtocol {
-    /// Инвертирует темные области на странице PDF
-    /// - Parameter page: Страница PDF для обработки
-    /// - Returns: Обработанное изображение в формате CGImage, или nil в случае ошибки
+    /// Inverts dark areas on PDF page
+    /// - Parameter page: PDF page for processing
+    /// - Returns: Processed image in CGImage format, or nil if error
     ///
-    /// Гарантии:
-    /// - Возвращает nil если:
-    ///   - страница имеет некорректные размеры (ширина или высота <= 0)
-    ///   - не удалось создать изображение из страницы
-    ///   - произошла ошибка при обработке изображения
-    /// - Сохраняет оригинальные размеры и характеристики изображения
-    /// - Потокобезопасен
+    /// Guarantees:
+    /// - Returns nil if:
+    ///   - page has incorrect dimensions (width or height <= 0)
+    ///   - could not create image from page
+    ///   - An error occurred during image processing
+    /// - Maintains original image size and characteristics
+    /// - Thread-safe.
     func invertDarkAreas(page: PDFPage) async -> CGImage?
     
-    /// Определяет, является ли область изображения темной
-    /// - Parameter image: Изображение для анализа
-    /// - Returns: true если область считается темной
+    /// Determines whether the image area is dark
+    /// - Parameter image: Image for analysis
+    /// - Returns: true if the area is considered dark
     ///
-    /// Реализации должны:
-    /// - Использовать согласованный алгоритм определения темных областей
-    /// - Корректно обрабатывать различные цветовые пространства
-    /// - Учитывать общую яркость изображения
+    /// The implementations must:
+    /// - Use a matching algorithm to determine dark areas
+    /// - Correctly handle different color spaces
+    /// - Consider the overall brightness of the image
     func isAreaDark(_ image: CIImage) -> Bool
 }
 
 extension ImageProcessingServiceProtocol {
-    /// Рекомендуемый порог яркости для определения темной области
+    // Recommended brightness threshold for dark area
     static var darknessTreshold: Double { 0.4 }
 }

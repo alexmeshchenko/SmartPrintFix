@@ -7,28 +7,34 @@
 
 import Foundation
 
-/// Represents a single log entry in the application's processing log
-/// Used to track operations and their status during PDF processing
+/// A structure representing a single entry in the application's processing log.
+///
+/// Example:
+/// ```swift
+/// let log = LogEntry(message: "Processing started")
+/// print(log.formattedMessage) // "ℹ️ [14:30:45] Processing started"
+/// ```
 struct LogEntry: Identifiable {
     /// Unique identifier for the log entry
     let id = UUID()
     
-    /// The log message content
+    /// Log message contentt
     let message: String
     
-    /// Timestamp when the log entry was created
+    /// Creation timestamp
     let timestamp: Date = Date()
     
-    /// The type/severity of the log entry
+    /// Severity level of the log entry
     let type: LogType
     
-    /// Represents different types of log entries
+    /// Different types of log entries with associated severity levels and icons
     enum LogType {
         case info
         case warning
         case error
         case success
         
+        /// Visual representation of the log type
         var icon: String {
             switch self {
             case .info: return "ℹ️"
@@ -39,16 +45,19 @@ struct LogEntry: Identifiable {
         }
     }
     
-    /// Creates a formatted string representation of the log entry
+    /// Returns formatted string: "{icon} [HH:mm:ss] {message}"
     var formattedMessage: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
         return "\(type.icon) [\(formatter.string(from: timestamp))] \(message)"
     }
     
-    /// Конструктор по умолчанию использует тип .info
-        init(message: String, type: LogType = .info) {
-            self.message = message
-            self.type = type
-        }
+    /// Creates a new log entry
+    /// - Parameters:
+    ///   - message: Log message content
+    ///   - type: Severity level (defaults to .info)
+    init(message: String, type: LogType = .info) {
+        self.message = message
+        self.type = type
+    }
 }

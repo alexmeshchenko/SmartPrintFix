@@ -7,7 +7,7 @@
 
 import PDFKit
 import CoreImage
-@testable import SmartPrintFix  // Добавляем импорт тестируемого модуля
+@testable import SmartPrintFix
 
 
 // Вся логика создания тестовых изображений перенесена в сам мок (логика работы с изображениями скрыта в моке)
@@ -23,13 +23,13 @@ class MockImageProcessingService: ImageProcessingServiceProtocol {
     var isAreaDarkCalled = false
     var providedPage: PDFPage?
     
-    // Добавляем конфигурацию для размера изображения
+    // Add configuration for image size
     var imageSize: CGSize = CGSize(width: 100, height: 100)
     var bitsPerComponent: Int = 8
     
     func invertDarkAreas(page: PDFPage) async -> CGImage? {
         invertDarkAreasCalled = true
-        providedPage = page // Сохраняем переданную страницу
+        providedPage = page // Save the transferred page
         
         if shouldReturnNil {
             return nil
@@ -47,16 +47,15 @@ class MockImageProcessingService: ImageProcessingServiceProtocol {
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ),
            let cgImage = context.makeImage() {
-            let ciImage = CIImage(cgImage: cgImage)  // CIImage не опционал
+            let ciImage = CIImage(cgImage: cgImage)
             _ = isAreaDark(ciImage)  // Вызываем метод для отметки флага
         }
         
-        // Проверяем корректность размеров
+        // Check the correct dimensions
         if imageSize.width <= 0 || imageSize.height <= 0 {
             return nil
         }
         
-        // Возвращаем тестовое изображение
         return createTestImage()
     }
     

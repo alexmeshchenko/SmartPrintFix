@@ -8,8 +8,8 @@
 import PDFKit
 import AppKit
 
+/// Service for processing PDF documents
 final class PDFProcessingService: PDFProcessingServiceProtocol {
-    // MARK: - Dependencies
     private let imageProcessingService: ImageProcessingServiceProtocol
     
     // MARK: - Initialization
@@ -18,9 +18,8 @@ final class PDFProcessingService: PDFProcessingServiceProtocol {
     }
     
     // MARK: - PDFProcessingServiceProtocol
-    
     func processPDF(document: PDFDocument, state: inout PDFProcessingState) async -> PDFDocument {
-        // Проверяем пустой документ
+        // Checking empty document
         guard validateDocument(document) else {
             state.addLog("Processing empty document.", type: .warning)
             return PDFDocument()
@@ -29,54 +28,53 @@ final class PDFProcessingService: PDFProcessingServiceProtocol {
         let newDocument = PDFDocument()
         state.addLog("Processing started...")
         
-        var processedPagesCount = 0
-        for i in 0..<document.pageCount {
-            guard let page = document.page(at: i) else {
-                state.addLog("Failed to access page \(i + 1).", type: .error)
-                continue
+        let processedPages = await withTaskGroup(of: (Int, PDFPage?).self) { group -> [(Int, PDFPage?)] in
+            let statePointer = UnsafeMutablePointer<PDFProcessingState>.allocate(capacity: 1)
+            statePointer.initialize(to: state)
+            defer {
+                state = statePointer.pointee
+                statePointer.deallocate()
             }
             
-            // Проверяем размеры страницы
-            let bounds = page.bounds(for: .mediaBox)
-            if bounds.width <= 0 || bounds.height <= 0 {
-                state.addLog("Invalid page dimensions for page \(i + 1).", type: .error)
-                continue
+            for pageIndex in 0..<document.pageCount {
+                group.addTask {
+                    guard let page = document.page(at: pageIndex) else { return (pageIndex, nil) }
+                    return (pageIndex, await self.processPage(page,
+                                                            pageNumber: pageIndex + 1,
+                                                            state: &statePointer.pointee))
+                }
             }
             
-            state.addLog("Processing page \(i + 1) of \(document.pageCount)...")
-            
-            if let processedPage = await processPage(page, pageNumber: i + 1, state: &state) {
-                newDocument.insert(processedPage, at: i)
-                processedPagesCount += 1
-                state.addLog("Page \(i + 1) processed.")
-            }
+            return await group.reduce(into: [(Int, PDFPage?)]()) { result, page in
+                result.append(page)
+            }.sorted(by: { $0.0 < $1.0 })
         }
         
-        // Проверяем результат обработки
-        if processedPagesCount < minProcessedPagesCount {
-            state.addLog("No pages were processed successfully.", type: .error)
+        processedPages.forEach { if let page = $1 { newDocument.insert(page, at: $0) } }
+        
+        let successCount = processedPages.compactMap(\.1).count
+        if successCount < minProcessedPagesCount {
+            state.addError("No pages were processed successfully")
             return PDFDocument()
-        } else if processedPagesCount < document.pageCount {
-            state.addLog("Processing completed with some errors.", type: .warning)
-        } else {
-            state.addLog("Processing completed successfully.", type: .success)
         }
+        
+        state.addSuccess("Processing completed successfully")
         return newDocument
     }
     
+    // создание PDFPage происходит в фоновом потоке, но мы ожидаем результат в потоке с более высоким приоритетом.
     func processPage(_ page: PDFPage, pageNumber: Int, state: inout PDFProcessingState) async -> PDFPage? {
         guard let processedCGImage = await imageProcessingService.invertDarkAreas(page: page) else {
-            state.addLog("Skipping page \(pageNumber): processing failed.", type: .warning)
+            state.addWarning("Failed to process page \(pageNumber)")
             return nil
         }
         
-        let processedImage = NSImage(cgImage: processedCGImage, size: page.bounds(for: .mediaBox).size)
-        guard let newPage = PDFPage(image: processedImage) else {
-            state.addLog("Failed to create new page \(pageNumber).", type: .error)
-            return nil
-        }
-        
-        return newPage
+        return await Task.detached {
+            let processedImage = NSImage(cgImage: processedCGImage,
+                                       size: page.bounds(for: .mediaBox).size)
+            guard let pdfPage = PDFPage(image: processedImage) else { return nil }
+            return pdfPage
+        }.value
     }
     
 }
