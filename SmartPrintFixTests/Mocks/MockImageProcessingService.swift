@@ -35,6 +35,22 @@ class MockImageProcessingService: ImageProcessingServiceProtocol {
             return nil
         }
         
+        // Добавляем вызов isAreaDark
+        // Создаем временное CIImage для проверки
+        if let context = CGContext(
+            data: nil,
+            width: Int(imageSize.width),
+            height: Int(imageSize.height),
+            bitsPerComponent: bitsPerComponent,
+            bytesPerRow: Int(imageSize.width) * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ),
+           let cgImage = context.makeImage() {
+            let ciImage = CIImage(cgImage: cgImage)  // CIImage не опционал
+            _ = isAreaDark(ciImage)  // Вызываем метод для отметки флага
+        }
+        
         // Проверяем корректность размеров
         if imageSize.width <= 0 || imageSize.height <= 0 {
             return nil

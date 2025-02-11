@@ -10,20 +10,18 @@ import AppKit
 
 final class PDFProcessingService: PDFProcessingServiceProtocol {
     // MARK: - Dependencies
-    
     private let imageProcessingService: ImageProcessingServiceProtocol
     
     // MARK: - Initialization
-    
     init(imageProcessingService: ImageProcessingServiceProtocol = ImageProcessingService()) {
         self.imageProcessingService = imageProcessingService
     }
     
-    // MARK: - Public Methods
+    // MARK: - PDFProcessingServiceProtocol
     
     func processPDF(document: PDFDocument, state: inout PDFProcessingState) async -> PDFDocument {
         // Проверяем пустой документ
-        if document.pageCount == 0 {
+        guard validateDocument(document) else {
             state.addLog("Processing empty document.", type: .warning)
             return PDFDocument()
         }
@@ -47,22 +45,15 @@ final class PDFProcessingService: PDFProcessingServiceProtocol {
             
             state.addLog("Processing page \(i + 1) of \(document.pageCount)...")
             
-            if let processedCGImage = await imageProcessingService.invertDarkAreas(page: page) {
-                let processedImage = NSImage(cgImage: processedCGImage, size: page.bounds(for: .mediaBox).size)
-                if let newPage = PDFPage(image: processedImage) {
-                    newDocument.insert(newPage, at: i)
-                    processedPagesCount += 1
-                    state.addLog("Page \(i + 1) processed.")
-                } else {
-                    state.addLog("Failed to create new page \(i + 1).", type: .error)
-                }
-            } else {
-                state.addLog("Skipping page \(i + 1): processing failed.", type: .warning)
+            if let processedPage = await processPage(page, pageNumber: i + 1, state: &state) {
+                newDocument.insert(processedPage, at: i)
+                processedPagesCount += 1
+                state.addLog("Page \(i + 1) processed.")
             }
         }
         
         // Проверяем результат обработки
-        if processedPagesCount == 0 {
+        if processedPagesCount < minProcessedPagesCount {
             state.addLog("No pages were processed successfully.", type: .error)
             return PDFDocument()
         } else if processedPagesCount < document.pageCount {
@@ -72,4 +63,20 @@ final class PDFProcessingService: PDFProcessingServiceProtocol {
         }
         return newDocument
     }
+    
+    func processPage(_ page: PDFPage, pageNumber: Int, state: inout PDFProcessingState) async -> PDFPage? {
+        guard let processedCGImage = await imageProcessingService.invertDarkAreas(page: page) else {
+            state.addLog("Skipping page \(pageNumber): processing failed.", type: .warning)
+            return nil
+        }
+        
+        let processedImage = NSImage(cgImage: processedCGImage, size: page.bounds(for: .mediaBox).size)
+        guard let newPage = PDFPage(image: processedImage) else {
+            state.addLog("Failed to create new page \(pageNumber).", type: .error)
+            return nil
+        }
+        
+        return newPage
+    }
+    
 }

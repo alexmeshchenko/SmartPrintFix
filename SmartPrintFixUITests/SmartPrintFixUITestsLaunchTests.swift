@@ -22,12 +22,16 @@ final class SmartPrintFixUITestsLaunchTests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        // Insert steps here to perform after app launch but before taking a screenshot,
-        // such as logging into a test account or navigating somewhere in the app
-
+        // Делаем скриншот
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "Launch Screen"
         attachment.lifetime = .keepAlways
         add(attachment)
+        
+        // Восстанавливаем Light Mode
+        if let script = NSAppleScript(source: "tell application \"System Events\" to tell appearance preferences to set dark mode to false") {
+            var error: NSDictionary?
+            script.executeAndReturnError(&error)
+        }
     }
 }

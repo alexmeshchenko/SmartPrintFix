@@ -79,7 +79,7 @@ final class ImageProcessingService: ImageProcessingServiceProtocol {
                          0.587 * Double(bytes[1]) +
                          0.114 * Double(bytes[2])) / 255.0
         
-        return brightness < 0.4  // Немного увеличим порог
+        return brightness < Self.darknessTreshold  // Немного увеличим порог
     }
     
     // MARK: - Private Methods
