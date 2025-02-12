@@ -5,89 +5,129 @@
 //  Created by Aleksandr Meshchenko on 10.02.25.
 //
 
-
 import SwiftUI
 import PDFKit
 
+/// A view that displays original and processed PDF documents side by side
 struct PDFRowView: View {
-    var originalDocument: PDFDocument?
-    var processedDocument: PDFDocument?
-    var onDropHandler: ([NSItemProvider]) -> Bool
-    var isProcessing: Bool // Передаем состояние обработки
-    var onImport: () -> Void
-    var onExport: () -> Void
+    /// Layout and style constants
+    private enum Constants {
+        // Layout
+        static let spacing: CGFloat = 8
+        static let cornerRadius: CGFloat = 10
+        
+        // Visual
+        static let placeholderOpacity: CGFloat = 0.2
+        static let progressScaleFactor: CGFloat = 2
+        static let progressBackgroundOpacity: CGFloat = 0.4
+    }
+    
+    let originalDocument: PDFDocument?
+    let processedDocument: PDFDocument?
+    let onDropHandler: ([NSItemProvider]) -> Bool
+    let isProcessing: Bool
+    let onImport: () -> Void
+    let onExport: () -> Void
     
     var body: some View {
-        VStack(spacing: 10) {
-            // Верхняя панель с информацией
-            HStack(spacing: 8) {
-                // Левая часть
-                HStack(spacing: 0) {
-                    if let path = originalDocument?.documentURL?.path {
-                        Text(path)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                    }
-                    Spacer()
-                    Button("Import", action: onImport)
+        VStack(spacing: Constants.spacing) {
+            toolbarView
+            documentContainerView
+        }
+    }
+    
+    // MARK: - Toolbar Components
+    
+    private var toolbarView: some View {
+        HStack(spacing: Constants.spacing) {
+            originalDocumentToolbar
+            processedDocumentToolbar
+        }
+    }
+    
+    private var originalDocumentToolbar: some View {
+        HStack {
+            documentPath
+            Spacer()
+            Button("Import", action: onImport)
+        }
+        .frame(maxWidth: .infinity)
+        .onDrop(of: [.fileURL], isTargeted: nil, perform: onDropHandler)
+    }
+    
+    private var documentPath: some View {
+        Group {
+            if let path = originalDocument?.documentURL?.path {
+                Text(path)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+        }
+    }
+    
+    private var processedDocumentToolbar: some View {
+        HStack {
+            Spacer()
+            Button("Export", action: onExport)
+                .disabled(processedDocument == nil)
+        }
+        .frame(maxWidth: .infinity)
+    }
+    
+    // MARK: - Document Views
+    
+    private var documentContainerView: some View {
+        HStack(spacing: Constants.spacing) {
+            originalDocumentView
+            processedDocumentView
+        }
+    }
+    
+    /// Left side view displaying the original PDF
+    private var originalDocumentView: some View {
+        VStack(spacing: 0) {
+            if let document = originalDocument {
+                PDFKitView(document: document)
+            } else {
+                placeholderView("Drop a PDF here or select a file.")
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .onDrop(of: [.fileURL], isTargeted: nil, perform: onDropHandler)
+    }
+    
+    /// Right side view displaying the processed PDF with processing overlay
+    private var processedDocumentView: some View {
+        ZStack {
+            VStack(spacing: 0) {
+                if let document = processedDocument {
+                    PDFKitView(document: document)
+                } else {
+                    placeholderView("Processed document will appear here.")
                 }
-                .frame(maxWidth: .infinity)
-                .onDrop(of: ["public.file-url"], isTargeted: nil, perform: onDropHandler)
-                
-                // Правая часть
-                HStack(spacing: 0) {
-                    Spacer()
-                    Button("Export", action: onExport)
-                        .disabled(processedDocument == nil)
-                }
-                .frame(maxWidth: .infinity)
             }
             
-            // Существующий HStack с PDF-документами
-            HStack(spacing: 8) {
-                // Левый PDF-документ
-                VStack(spacing: 0) {
-                    if let originalDocument = originalDocument {
-                        PDFKitView(document: originalDocument)
-                            .onDrop(of: ["public.file-url"], isTargeted: nil, perform: onDropHandler)
-                    } else {
-                        
-                        Text("Drop a PDF here or select a file.")
-                            .frame(maxHeight: .infinity) // Добавляем это
-                            .frame(maxWidth: .infinity)
-                            .background(Color.gray.opacity(0.2))
-                            .cornerRadius(10)
-                            .onDrop(of: ["public.file-url"], isTargeted: nil, perform: onDropHandler)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                
-                // Правый PDF-документ
-                ZStack {
-                    VStack(spacing: 0) {
-                        if let processedDocument = processedDocument {
-                            PDFKitView(document: processedDocument)
-                        } else {
-                            Text("Processed document will appear here.")
-                                .frame(maxHeight: .infinity) // Добавляем это
-                                .frame(maxWidth: .infinity)
-                                .background(Color.gray.opacity(0.2))
-                                .cornerRadius(10)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    // Прогресс-бар, отображается поверх правого окна
-                    if isProcessing {
-                        ProgressView()
-                            .scaleEffect(2) // Увеличиваем размер
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .background(Color.black.opacity(0.4)) // Полупрозрачный фон
-                            .cornerRadius(10)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            } // HStack -- Существующий HStack с PDF-документами
+            if isProcessing {
+                processingOverlay
+            }
         }
-    } // body
+        .frame(maxWidth: .infinity)
+    }
+    
+    // MARK: - Helper Views
+    
+    private func placeholderView(_ text: String) -> some View {
+        Text(text)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.gray.opacity(Constants.placeholderOpacity))
+            .cornerRadius(Constants.cornerRadius)
+    }
+    
+    private var processingOverlay: some View {
+        ProgressView()
+            .scaleEffect(Constants.progressScaleFactor)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black.opacity(Constants.progressBackgroundOpacity))
+            .cornerRadius(Constants.cornerRadius)
+    }
 }

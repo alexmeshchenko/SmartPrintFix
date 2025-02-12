@@ -43,7 +43,7 @@ struct ProcessingLogView: View {
                         .foregroundColor(isHoveringOverTrash ? .black : .gray)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(isHoveringOverTrash ? Color.orange.opacity(0.2) : Color.clear)
+                        .background(Color.clear)
                         .cornerRadius(8)
                 }
                 .onHover { hovering in

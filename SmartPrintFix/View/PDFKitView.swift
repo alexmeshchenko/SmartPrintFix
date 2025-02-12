@@ -24,7 +24,5 @@ struct PDFKitView: NSViewRepresentable {
 
     func updateNSView(_ pdfView: PDFView, context: Context) {
         pdfView.document = document
-        
-       
     }
 }

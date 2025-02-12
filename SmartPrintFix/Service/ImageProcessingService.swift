@@ -21,25 +21,10 @@ final class ImageProcessingService: ImageProcessingServiceProtocol {
     
     // MARK: - ImageProcessingServiceProtocol
     func invertDarkAreas(page: PDFPage) async -> CGImage? {
-        guard let cgImage = pdfPageToCGImage(page) else { return nil }
-        return await detectAndInvertDarkRectangles(cgImage: cgImage)
-    }
-    
-    func pdfPageToCGImage(_ page: PDFPage) -> CGImage? {
-        // Check the input
         let bounds = page.bounds(for: .mediaBox)
-        guard bounds.width > 0, bounds.height > 0 else { return nil }
-        
-        // Get maximum quality image
-        let image = page.thumbnail(of: CGSize(
-            width: bounds.width * 2, // Increase resolution
-            height: bounds.height * 2
-        ), for: .mediaBox)
-        
-        guard let tiffData = image.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData) else { return nil }
-        
-        return bitmap.cgImage
+        guard bounds.width > 0, bounds.height > 0,
+              let cgImage = pdfPageToCGImage(page) else { return nil }
+        return await detectAndInvertDarkRectangles(cgImage: cgImage)
     }
     
     func isAreaDark(_ image: CIImage) -> Bool {
@@ -71,69 +56,70 @@ final class ImageProcessingService: ImageProcessingServiceProtocol {
         return brightness < Self.darknessTreshold
     }
     
+}
+
+// MARK: - Private Methods
+private extension ImageProcessingService {
+    func pdfPageToCGImage(_ page: PDFPage) -> CGImage? {
+        // Check the input
+        let bounds = page.bounds(for: .mediaBox)
+        // Get maximum quality image
+        let size = CGSize(width: bounds.width * 2, height: bounds.height * 2)
+        let image = page.thumbnail(of: size, for: .mediaBox)
+        
+        guard let tiffData = image.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData) else { return nil }
+        
+        return bitmap.cgImage
+    }
+    
     // MARK: - Private Methods
-    private func detectAndInvertDarkRectangles(cgImage: CGImage) async -> CGImage? {
-        return await withCheckedContinuation { continuation in
-            let request = VNDetectRectanglesRequest { [weak self] request, error in
-                guard let self = self else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-                
-                if let error = error {
-                    print("Vision error: \(error)")
-                    continuation.resume(returning: nil)
-                    return
-                }
-                
-                guard let observations = request.results as? [VNRectangleObservation] else {
-                    continuation.resume(returning: cgImage)
-                    return
-                }
-                
-                var ciImage = CIImage(cgImage: cgImage)
-                
-                // Filter and process only large enough dark areas
-                for observation in observations {
-                    let box = observation.boundingBox
-                    
-                    // Miss too small areas
-                    let minArea = 0.05
-                    if (box.width * box.height) < minArea {
-                        continue
+    func detectAndInvertDarkRectangles(cgImage: CGImage) async -> CGImage? {
+        await withCheckedContinuation { continuation in
+            Task(priority: .userInitiated) {
+                let request = VNDetectRectanglesRequest { [weak self] request, error in
+                    guard let self = self,
+                          error == nil,
+                          let observations = request.results as? [VNRectangleObservation] else {
+                        return continuation.resume(returning: cgImage)
                     }
                     
-                    let imageBox = observation.boundingBox.scaled(to: ciImage.extent)
-                    let croppedImage = ciImage.cropped(to: imageBox)
-                    
-                    if self.isAreaDark(croppedImage) {
-                        if let invertedArea = self.invertArea(croppedImage),
-                           let blendedImage = self.blendArea(original: ciImage,
-                                                             inverted: invertedArea,
-                                                             in: imageBox) {
-                            ciImage = blendedImage
-                        }
+                    Task {
+                        let processedImage = await self.processObservations(observations, cgImage: cgImage)
+                        continuation.resume(returning: processedImage ?? cgImage)
                     }
                 }
                 
-                if let outputCGImage = self.context.createCGImage(ciImage, from: ciImage.extent) {
-                    continuation.resume(returning: outputCGImage)
-                } else {
+                configureRectangleRequest(request)
+                
+                do {
+                    let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+                    try handler.perform([request])
+                } catch {
                     continuation.resume(returning: cgImage)
                 }
             }
-            
-            // Configure the search box settings
-            configureRectangleRequest(request)
-            
-            try? VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
         }
     }
     
-}
-
-// MARK: - Helpers
-private extension ImageProcessingService {
+    func processObservations(_ observations: [VNRectangleObservation], cgImage: CGImage) async -> CGImage? {
+        var ciImage = CIImage(cgImage: cgImage)
+        
+        for observation in observations where observation.boundingBox.area > Self.minAreaSize {
+            let imageBox = observation.boundingBox.scaled(to: ciImage.extent)
+            let croppedImage = ciImage.cropped(to: imageBox)
+            
+            if isAreaDark(croppedImage),
+               let invertedArea = invertArea(croppedImage),
+               let blended = blendArea(original: ciImage, inverted: invertedArea, in: imageBox) {
+                ciImage = blended
+            }
+        }
+        
+        return await Task.detached(priority: .userInitiated) { [self] in
+            return self.context.createCGImage(ciImage, from: ciImage.extent)
+        }.value
+    }
     
     private func invertArea(_ image: CIImage) -> CIImage? {
         guard let invertFilter = CIFilter(name: "CIColorInvert") else { return nil }
@@ -156,7 +142,7 @@ private extension ImageProcessingService {
         return blendFilter.outputImage
     }
     
-    private func configureRectangleRequest(_ request: VNDetectRectanglesRequest) {
+    func configureRectangleRequest(_ request: VNDetectRectanglesRequest) {
         request.minimumAspectRatio = 0.3
         request.maximumAspectRatio = 3.0
         request.minimumSize = 0.1

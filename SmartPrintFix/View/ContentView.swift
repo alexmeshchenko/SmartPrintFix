@@ -80,7 +80,6 @@ private extension ContentView {
 
 // MARK: - File Operations
 private extension ContentView {
-    
     func handleFileImport(_ result: Result<URL, Error>) {
         guard FileAccessUtility.checkDownloadsAccess() else {
             state.addWarning("No access to Downloads folder")
