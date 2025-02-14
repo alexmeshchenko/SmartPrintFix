@@ -25,15 +25,22 @@ protocol PDFProcessingServiceProtocol {
     /// Processes single PDF page
     /// - Returns: Processed page or nil if failed
     func processPage(_ page: PDFPage, pageNumber: Int, state: inout PDFProcessingState) async -> PDFPage?
-    //
-    //        /// Проверяет, требует ли документ обработки
-    //        /// - Parameter document: PDF документ для проверки
-    //        /// - Returns: true если документ требует обработки
-    //        func requiresProcessing(_ document: PDFDocument) -> Bool
-    
+
     /// Validates document before processing
     func validateDocument(_ document: PDFDocument) -> Bool
 }
+
+// TODO: Future improvements
+// - Add document processing check:
+//   ```swift
+//   /// Checks if document requires processing
+//   /// - Parameter document: PDF document to check
+//   /// - Returns: true if document needs processing
+//   func requiresProcessing(_ document: PDFDocument) -> Bool
+//   ```
+// - Consider optimization for documents that don't need processing
+// - Add progress tracking for large documents
+
 
 extension PDFProcessingServiceProtocol {
     var minProcessedPagesCount: Int { 1 }

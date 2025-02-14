@@ -10,6 +10,18 @@ import CoreGraphics
 import PDFKit
 import AppKit
 
+actor CIContextService {
+    private let context: CIContext
+    
+    init(context: CIContext = CIContext()) {
+        self.context = context
+    }
+    
+    func createCGImage(from image: CIImage, in extent: CGRect) -> CGImage? {
+        context.createCGImage(image, from: extent)
+    }
+}
+
 /// Service for processing PDF images with dark area detection and inversion
 final class ImageProcessingService: ImageProcessingServiceProtocol {
     private let context: CIContext
@@ -27,14 +39,14 @@ final class ImageProcessingService: ImageProcessingServiceProtocol {
         return await detectAndInvertDarkRectangles(cgImage: cgImage)
     }
     
-    func isAreaDark(_ image: CIImage) -> Bool {
+    func isAreaDark(_ image: CIImage) async -> Bool {
+        // Prepare filters
         guard let colorControls = CIFilter(name: "CIColorControls"),
               let areaAverage = CIFilter(name: "CIAreaAverage") else { return false }
         
-        // Increase contrast for better separation of dark areas
         colorControls.setValue(image, forKey: kCIInputImageKey)
         colorControls.setValue(1.5, forKey: "inputContrast")
-        colorControls.setValue(0.0, forKey: "inputSaturation") // Remove color
+        colorControls.setValue(0.0, forKey: "inputSaturation")
         
         guard let contrastImage = colorControls.outputImage else { return false }
         
@@ -109,16 +121,14 @@ private extension ImageProcessingService {
             let imageBox = observation.boundingBox.scaled(to: ciImage.extent)
             let croppedImage = ciImage.cropped(to: imageBox)
             
-            if isAreaDark(croppedImage),
+            if await isAreaDark(croppedImage),
                let invertedArea = invertArea(croppedImage),
                let blended = blendArea(original: ciImage, inverted: invertedArea, in: imageBox) {
                 ciImage = blended
             }
         }
         
-        return await Task.detached(priority: .userInitiated) { [self] in
-            return self.context.createCGImage(ciImage, from: ciImage.extent)
-        }.value
+        return context.createCGImage(ciImage, from: ciImage.extent)
     }
     
     private func invertArea(_ image: CIImage) -> CIImage? {

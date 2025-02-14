@@ -10,32 +10,41 @@ import CoreImage
 @testable import SmartPrintFix
 
 final class MockPDFProcessingService: PDFProcessingServiceProtocol {
-    // MARK: - Test Properties
     
-    var processPDFCalled = false
-    var processPageCalled = false
-    var validateDocumentCalled = false
+    // MARK: - Configuration
+    struct Configuration {
+        var shouldFailProcessing = false
+        var stubbedResult: PDFDocument?
+    }
     
-    var providedDocument: PDFDocument?
-    var stubbedResult: PDFDocument?
-    var shouldFailProcessing = false
+    private(set) var configuration: Configuration
+    
+    // MARK: - Call Tracking
+    private(set) var processPDFCalled = false
+    private(set) var processPageCalled = false
+    private(set) var validateDocumentCalled = false
+    private(set) var providedDocument: PDFDocument?
+    
+    // MARK: - Initialization
+    init(configuration: Configuration = .init()) {
+        self.configuration = configuration
+    }
     
     // MARK: - PDFProcessingServiceProtocol
-    
     func processPDF(document: PDFDocument, state: inout PDFProcessingState) async -> PDFDocument {
         processPDFCalled = true
         providedDocument = document
         
-        // Add special processing of empty document
-        guard validateDocument(document) else {
-             state.addLog("Processing empty document.", type: .warning)
-             return PDFDocument()
-         }
-        
-        if shouldFailProcessing {
-            state.addLog("Processing failed.", type: .error)
+        if configuration.shouldFailProcessing {
+            state.addError("Processing failed")
             return PDFDocument()
         }
+        
+        // Add special processing of empty document
+        guard validateDocument(document) else {
+            state.addWarning("Processing empty document")
+             return PDFDocument()
+         }
         
         // Simulate the real service logging
         state.addLog("Processing started...")
@@ -51,20 +60,20 @@ final class MockPDFProcessingService: PDFProcessingServiceProtocol {
         
         // Using minProcessedPagesCount from extension
         if processedPagesCount < minProcessedPagesCount {
-            state.addLog("No pages were processed successfully.", type: .error)
+            state.addError("No pages were processed successfully")
             return PDFDocument()
         }
         
-        state.addLog("Processing completed.", type: .success)
-        return stubbedResult ?? PDFDocument()
+        state.addSuccess("Processing completed")
+        return configuration.stubbedResult ?? PDFDocument()
     }
     
     func processPage(_ page: PDFPage, pageNumber: Int, state: inout PDFProcessingState) async -> PDFPage? {
         processPageCalled = true
         state.addLog("Processing page \(pageNumber)...")
         
-        if shouldFailProcessing {
-            state.addLog("Failed to process page \(pageNumber).", type: .error)
+        if configuration.shouldFailProcessing {
+            state.addError("Failed to process page \(pageNumber)")
             return nil
         }
         
@@ -73,10 +82,20 @@ final class MockPDFProcessingService: PDFProcessingServiceProtocol {
     
     func validateDocument(_ document: PDFDocument) -> Bool {
         validateDocumentCalled = true
-        if shouldFailProcessing {
-            return false
-        }
-        guard document.pageCount > 0 else { return false }
-        return true
+        return document.pageCount > 0
+    }
+}
+
+// MARK: - Testing Helpers
+extension MockPDFProcessingService {
+    func reset() {
+        processPDFCalled = false
+        processPageCalled = false
+        validateDocumentCalled = false
+        providedDocument = nil
+    }
+    
+    func configure(_ update: (inout Configuration) -> Void) {
+        update(&configuration)
     }
 }

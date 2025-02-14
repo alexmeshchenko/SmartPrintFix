@@ -23,7 +23,9 @@ struct PDFProcessingTests {
         let resultDocument = PDFDocument()
         let processedPage = PDFPage()
         resultDocument.insert(processedPage, at: 0)
-        mockPDFService.stubbedResult = resultDocument  // Set expected result
+        mockPDFService.configure { config in
+            config.stubbedResult = resultDocument // Set expected result
+        }
         
         var state = PDFProcessingState()
         
@@ -76,7 +78,32 @@ struct PDFProcessingTests {
         #expect(mockPDFService.processPageCalled, "Page processing should be called")
         #expect(processedPage != nil, "Should return processed page")
         #expect(state.logMessages.contains { $0.message.contains("Processing page 1") },
-               "Should log page processing")
+                "Should log page processing")
+    }
+    
+    @Test
+    func testProcessPDFWithFailure() async throws {
+        // Given
+        let mockPDFService = MockPDFProcessingService()
+        mockPDFService.configure { config in
+            config.shouldFailProcessing = true
+        }
+        
+        let inputDocument = PDFDocument()
+        inputDocument.insert(PDFPage(), at: 0)
+        var state = PDFProcessingState()
+        
+        // When
+        let processedDocument = await mockPDFService.processPDF(
+            document: inputDocument,
+            state: &state
+        )
+        
+        // Then
+        #expect(mockPDFService.processPDFCalled, "Processing should be called")
+        #expect(processedDocument.pageCount == 0, "Failed processing should result in empty document")
+        #expect(mockPDFService.providedDocument === inputDocument, "Service should store provided document")
+        #expect(state.logMessages.contains { $0.type == .error }, "Should have error log entry")
     }
     
 }

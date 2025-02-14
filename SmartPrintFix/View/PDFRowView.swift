@@ -89,7 +89,7 @@ struct PDFRowView: View {
             if let document = originalDocument {
                 PDFKitView(document: document)
             } else {
-                placeholderView("Drop a PDF here or select a file.")
+                PlaceholderView(text: "Drop a PDF here or select a file.", icon: "document.badge.plus")
             }
         }
         .frame(maxWidth: .infinity)
@@ -103,7 +103,7 @@ struct PDFRowView: View {
                 if let document = processedDocument {
                     PDFKitView(document: document)
                 } else {
-                    placeholderView("Processed document will appear here.")
+                    PlaceholderView(text: "Processed document will appear here.")
                 }
             }
             
@@ -115,14 +115,6 @@ struct PDFRowView: View {
     }
     
     // MARK: - Helper Views
-    
-    private func placeholderView(_ text: String) -> some View {
-        Text(text)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.gray.opacity(Constants.placeholderOpacity))
-            .cornerRadius(Constants.cornerRadius)
-    }
-    
     private var processingOverlay: some View {
         ProgressView()
             .scaleEffect(Constants.progressScaleFactor)

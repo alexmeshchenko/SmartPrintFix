@@ -8,56 +8,88 @@ import SwiftUI
 
 struct ProcessingLogView: View {
     @Binding var logMessages: [LogEntry]
+    @State private var isHoveringOverClear = false
     
-    @State private var isHoveringOverTrash: Bool = false // Для отслеживания наведения
-    
-    var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 5) {
-                    ForEach(logMessages) { logEntry in
-                        HStack {
-                            Text(logEntry.formattedMessage)
-                                .font(.caption)
-                                .foregroundColor(color(for: logEntry.type))
-                            Spacer()
-                        }
-                        .padding(.vertical, 2)
-                        .cornerRadius(5)
-                    }
-                }
-                .padding()
-            }
-            .defaultScrollAnchor(.bottom)
-            .frame(maxWidth: .infinity, maxHeight: 150)
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(10)
-            
-            // Кнопка очистки логов
-            if !logMessages.isEmpty {
-                Button(action: {
-                    logMessages.removeAll()
-                }) {
-                    Text("Clear")
-                        .font(.system(size: 12))
-                        .foregroundColor(isHoveringOverTrash ? .black : .gray)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.clear)
-                        .cornerRadius(8)
-                }
-                .onHover { hovering in
-                    isHoveringOverTrash = hovering
-                }
-                .accessibilityLabel("Очистить логи") // Описание для доступности
-                .offset(x: -16, y: 0) // Смещение кнопки на 4 пикселя влево
-                .transition(.opacity) // Плавное появление и исчезновение
-                .animation(.easeInOut(duration: 0.3), value: logMessages.isEmpty) // Анимация с длительностью 0.3 секунды
-            }
+    private enum Constants {
+        static let spacing: CGFloat = 5
+        static let padding: CGFloat = 16
+        static let verticalPadding: CGFloat = 2
+        static let cornerRadius: CGFloat = 10
+        static let maxHeight: CGFloat = 150
+        static let backgroundColor: Color = .gray.opacity(0.1)
+        
+        enum ClearButton {
+            static let fontSize: CGFloat = 12
+            static let horizontalPadding: CGFloat = 8
+            static let verticalPadding: CGFloat = 4
+            static let cornerRadius: CGFloat = 8
+            static let offset: CGFloat = -16
+            static let animationDuration: CGFloat = 0.3
         }
     }
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            logListView
+            clearButtonView
+        }
+    }
+}
+
+// MARK: - Subviews
+private extension ProcessingLogView {
+    var logListView: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Constants.spacing) {
+                ForEach(logMessages) { entry in
+                    logEntryView(entry)
+                }
+            }
+            .padding(Constants.padding)
+        }
+        .defaultScrollAnchor(.bottom)
+        .frame(maxWidth: .infinity, maxHeight: Constants.maxHeight)
+        .background(Constants.backgroundColor)
+        .cornerRadius(Constants.cornerRadius)
+    }
     
-    private func color(for type: LogEntry.LogType) -> Color {
+    func logEntryView(_ entry: LogEntry) -> some View {
+        HStack {
+            Text(entry.formattedMessage)
+                .font(.caption)
+                .foregroundColor(color(for: entry.type))
+            Spacer()
+        }
+        .padding(.vertical, Constants.verticalPadding)
+        .cornerRadius(Constants.cornerRadius)
+    }
+    
+    @ViewBuilder
+    var clearButtonView: some View {
+        if !logMessages.isEmpty {
+            Button(action: { logMessages.removeAll() }) {
+                Text("Clear")
+                    .font(.system(size: Constants.ClearButton.fontSize))
+                    .foregroundColor(isHoveringOverClear ? .black : .gray)
+                    .padding(.horizontal, Constants.ClearButton.horizontalPadding)
+                    .padding(.vertical, Constants.ClearButton.verticalPadding)
+                    .background(.clear)
+                    .cornerRadius(Constants.ClearButton.cornerRadius)
+            }
+            .onHover { isHoveringOverClear = $0 }
+            .accessibilityLabel("Clear logs")
+            .offset(x: Constants.ClearButton.offset)
+            .transition(.opacity)
+            .animation(
+                .easeInOut(duration: Constants.ClearButton.animationDuration),
+                value: logMessages.isEmpty
+            )
+        }
+    }
+}
+
+// MARK: - Helper Methods
+private extension ProcessingLogView {
+    func color(for type: LogEntry.LogType) -> Color {
         switch type {
         case .info: return .gray
         case .warning: return .orange

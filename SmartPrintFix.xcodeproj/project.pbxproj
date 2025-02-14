@@ -28,17 +28,8 @@
 		793BC36A2D54E04900512AAA /* SmartPrintFixTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SmartPrintFixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		793BC3742D54E04900512AAA /* SmartPrintFixUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SmartPrintFixUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		799C96382D56C21E00FC09BA /* readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = readme.md; sourceTree = "<group>"; };
+		79BD8D862D5DFEE800C6EF81 /* SmartPrintFix.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = SmartPrintFix.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		799DE6E12D5B7AE400DABA3D /* Exceptions for "SmartPrintFixTests" folder in "SmartPrintFixTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				TestPlans/SmartPrintFix.xctestplan,
-			);
-			target = 793BC3692D54E04900512AAA /* SmartPrintFixTests */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		793BC35B2D54E04600512AAA /* SmartPrintFix */ = {
@@ -48,9 +39,6 @@
 		};
 		793BC36D2D54E04900512AAA /* SmartPrintFixTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				799DE6E12D5B7AE400DABA3D /* Exceptions for "SmartPrintFixTests" folder in "SmartPrintFixTests" target */,
-			);
 			path = SmartPrintFixTests;
 			sourceTree = "<group>";
 		};
@@ -89,6 +77,7 @@
 		793BC3502D54E04600512AAA = {
 			isa = PBXGroup;
 			children = (
+				79BD8D862D5DFEE800C6EF81 /* SmartPrintFix.xctestplan */,
 				799C96382D56C21E00FC09BA /* readme.md */,
 				793BC35B2D54E04600512AAA /* SmartPrintFix */,
 				793BC36D2D54E04900512AAA /* SmartPrintFixTests */,

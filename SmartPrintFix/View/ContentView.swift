@@ -9,11 +9,24 @@ import SwiftUI
 import PDFKit
 
 struct ContentView: View {
-    @State private var state = PDFProcessingState()
+    
+    private enum Constants {
+        static let fileType = "public.file-url"
+        static let processedFilePrefix = "processed_"
+        static let defaultFileName = "document"
+    }
+    
+    @State private var state = PDFProcessingState() // Model (data only)
     @State private var showFilePicker = false
+    private let pdfProcessingService: PDFProcessingServiceProtocol // Service (business logic)
     
-    private let pdfProcessingService: PDFProcessingServiceProtocol
+    // MARK: - View Properties
+    private var processedDocument: PDFDocument? {
+        guard !state.isProcessing else { return nil }
+        return state.processedDocument
+    }
     
+    // MARK: - Initialization
     init(pdfProcessingService: PDFProcessingServiceProtocol = PDFProcessingService()) {
         self.pdfProcessingService = pdfProcessingService
     }
@@ -41,11 +54,6 @@ struct ContentView: View {
         )
     }
     
-    private var processedDocument: PDFDocument? {
-        guard !state.isProcessing else { return nil }
-        return state.processedDocument
-    }
-    
 }
 
 // MARK: - PDF Processing
@@ -58,16 +66,12 @@ private extension ContentView {
         
         Task {
             state.isProcessing = true
+            var localState = state // Copy state for async processing
             
-            // 1. Копируем состояние
-            var localState = state
-            
-            // 2. Запускаем обработку через инстанс сервиса
-            // В Swift 6 изменились правила работы с @State, @Published и @Binding.
-            // Они теперь actor-isolated, что запрещает их передачу inout в async функции.
+            // In Swift 6, the rules for @State, @Published, and @Binding have changed.
+            // They are now actor-isolated, which prevents passing them as inout arguments to async functions.
             let newDoc = await pdfProcessingService.processPDF(document: document, state: &localState)
             
-            // 3. Обновляем `state` после выполнения
             await MainActor.run {
                 state = localState
                 state.processedDocument = newDoc
@@ -116,6 +120,11 @@ private extension ContentView {
         return true
     }
     
+}
+
+// MARK: - PDF Processing
+private extension ContentView {
+    
     func loadPDF(from url: URL) {
         guard !state.isProcessing else {
             state.addWarning("Processing in progress")
@@ -143,7 +152,7 @@ private extension ContentView {
         
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.pdf]
-        savePanel.nameFieldStringValue = "processed_\(state.selectedFileName ?? "document").pdf"
+        savePanel.nameFieldStringValue = "\(Constants.processedFilePrefix)\(state.selectedFileName ?? Constants.defaultFileName).pdf"
         
         savePanel.begin { response in
             guard response == .OK, let url = savePanel.url else {

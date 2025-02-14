@@ -9,6 +9,9 @@ import PDFKit
 import AppKit
 
 /// Service for processing PDF documents
+/// Responsible for business logic:
+/// PDFProcessingService
+/// ImageProcessingService
 final class PDFProcessingService: PDFProcessingServiceProtocol {
     private let imageProcessingService: ImageProcessingServiceProtocol
     
@@ -62,18 +65,18 @@ final class PDFProcessingService: PDFProcessingServiceProtocol {
         return newDocument
     }
     
-    // создание PDFPage происходит в фоновом потоке, но мы ожидаем результат в потоке с более высоким приоритетом.
+    // The PDFPage build takes place in the background flow, with a lower priority than the expected flow.
+    // We need to explicitly specify the priority for the Task:
     func processPage(_ page: PDFPage, pageNumber: Int, state: inout PDFProcessingState) async -> PDFPage? {
         guard let processedCGImage = await imageProcessingService.invertDarkAreas(page: page) else {
             state.addWarning("Failed to process page \(pageNumber)")
             return nil
         }
         
-        return await Task.detached {
+        return await Task.detached(priority: .userInitiated) {
             let processedImage = NSImage(cgImage: processedCGImage,
                                        size: page.bounds(for: .mediaBox).size)
-            guard let pdfPage = PDFPage(image: processedImage) else { return nil }
-            return pdfPage
+            return PDFPage(image: processedImage)
         }.value
     }
     

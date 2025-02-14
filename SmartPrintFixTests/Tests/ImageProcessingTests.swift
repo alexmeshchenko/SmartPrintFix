@@ -45,7 +45,9 @@ struct ImageProcessingTests {
     func testImageProcessingWithError() async throws {
         // Given
         let mockImageService = MockImageProcessingService()
-        mockImageService.shouldReturnNil = true // Simulate processing error
+        mockImageService.configure { config in
+            config.shouldReturnNil = true // Simulate processing error
+        }
         let processingService = PDFProcessingService(imageProcessingService: mockImageService)
         
         // When
@@ -69,8 +71,10 @@ struct ImageProcessingTests {
     func testLargeImageProcessing() async throws {
         // Given
         let mockImageService = MockImageProcessingService()
-        mockImageService.imageSize = CGSize(width: 1000, height: 1000)
-        mockImageService.bitsPerComponent = 8
+        mockImageService.configure { config in
+            config.imageSize = CGSize(width: 1000, height: 1000)
+            config.bitsPerComponent = 8
+        }
         
         // When
         let pdfPage = PDFPage()
@@ -96,8 +100,10 @@ struct ImageProcessingTests {
         // Given
         let mockImageService = MockImageProcessingService()
         // Adjust the size and performance of the test image directly in the mock
-        mockImageService.imageSize = CGSize(width: 100, height: 100)
-        mockImageService.bitsPerComponent = 8
+        mockImageService.configure { config in
+            config.imageSize = CGSize(width: 100, height: 100)
+            config.bitsPerComponent = 8
+        }
         
         let pdfPage = PDFPage()
         
@@ -121,7 +127,9 @@ struct ImageProcessingTests {
     func testInvertDarkAreasWithError() async throws {
         // Given
         let mockImageService = MockImageProcessingService()
-        mockImageService.shouldReturnNil = true
+        mockImageService.configure { config in
+            config.shouldReturnNil = true
+        }
         let pdfPage = PDFPage()
         
         // When
@@ -138,7 +146,9 @@ struct ImageProcessingTests {
         // Given
         let mockImageService = MockImageProcessingService()
         // Set image size to incorrect
-        mockImageService.imageSize = CGSize(width: -1, height: -1)
+        mockImageService.configure { config in
+            config.imageSize = CGSize(width: -1, height: -1)
+        }
         let pdfPage = PDFPage()
         
         // When
@@ -153,18 +163,20 @@ struct ImageProcessingTests {
     
     @Test
     func testInvertDarkAreasWithBlackImage() async throws {
-        // Given
+        // preparing (Given)
         let mockImageService = MockImageProcessingService()
         // Set small size for black image
-        mockImageService.imageSize = CGSize(width: 50, height: 50)
-        mockImageService.bitsPerComponent = 8
+        mockImageService.configure { config in
+            config.imageSize = CGSize(width: 50, height: 50) // Set image size to small
+            config.bitsPerComponent = 8  // Set color depth
+        }
         
-        let pdfPage = PDFPage()
+        let pdfPage = PDFPage() // Create a PDF test page
         
-        // When
+        // action (When)
         let result = await mockImageService.invertDarkAreas(page: pdfPage)
         
-        // Then
+        // checking (Then)
         #expect(mockImageService.invertDarkAreasCalled, "invertDarkAreas should be called")
         #expect(mockImageService.isAreaDarkCalled, "isAreaDark should be called")
         #expect(result != nil, "Should return processed image")
@@ -176,7 +188,9 @@ struct ImageProcessingTests {
     func testInvertDarkAreasWithFailure() async throws {
         // Given
         let mockImageService = MockImageProcessingService()
-        mockImageService.shouldReturnNil = true  // Simulate error
+        mockImageService.configure { config in
+            config.shouldReturnNil = true // Simulate error
+        }
         let pdfPage = PDFPage()
         
         // When
@@ -192,7 +206,9 @@ struct ImageProcessingTests {
     func testProcessPDFWithFailure() async throws {
         // Given
         let mockImageService = MockImageProcessingService()
-        mockImageService.shouldReturnNil = true
+        mockImageService.configure { config in
+            config.shouldReturnNil = true // Simulate error
+        }
         let processingService = PDFProcessingService(imageProcessingService: mockImageService)
         
         let document = PDFDocument()

@@ -14,13 +14,13 @@ struct PDFProcessingState {
     /// Current PDF document being processed
     var pdfDocument: PDFDocument?
     
+    var processedDocument: PDFDocument?
+    
     /// Name of the selected PDF file
     var selectedFileName: String?
     
     /// Indicates if processing is in progress
     var isProcessing: Bool = false
-    
-    var processedDocument: PDFDocument?
     
     /// Processing history logs
     var logMessages: [LogEntry] = []

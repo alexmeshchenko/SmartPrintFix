@@ -32,7 +32,7 @@ protocol ImageProcessingServiceProtocol {
     /// - Use a matching algorithm to determine dark areas
     /// - Correctly handle different color spaces
     /// - Consider the overall brightness of the image
-    func isAreaDark(_ image: CIImage) -> Bool
+    func isAreaDark(_ image: CIImage) async -> Bool
 }
 
 extension ImageProcessingServiceProtocol {
