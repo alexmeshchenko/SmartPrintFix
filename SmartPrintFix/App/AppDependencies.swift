@@ -5,7 +5,7 @@
 //  Created by Aleksandr Meshchenko on 15.02.25.
 //
 
-// Контейнер зависимостей
+// Dependency container
 
 final class AppDependencies {
     static let shared = AppDependencies()
@@ -15,8 +15,8 @@ final class AppDependencies {
     let fileService: FileServiceProtocol
     
     private init() {
-        self.imageService = ImageProcessingService()
         self.fileService = FileService()
+        self.imageService = ImageProcessingService()
         self.pdfService = PDFProcessingService(
             imageProcessingService: imageService
         )

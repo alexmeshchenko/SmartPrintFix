@@ -17,27 +17,37 @@ It **inverts dark areas** in PDFs (such as code blocks with dark backgrounds) to
 ## 🏗️ Architecture (MVVM + Service-UtilityU)
 The project follows an extended **Model-View-ViewModel** architecture with additional Service and Utility layers:
 
-📂 SmartPrintFix 
+📂 SmartPrintFix
 ├── 📂 App # Application root
 │   ├── AppDependencies.swift # Dependency container
 │   ├── SmartPrintFixApp.swift # Entry point
-├── 📂 Model # Application state and data models
-│   ├── PDFProcessingState.swift # Processing state management
-│   ├── LogEntry.swift # Logging system model
-├── 📂 ViewModel
-│   ├── PDFProcessingViewModel.swift # Main view model
-├── 📂 View # SwiftUI Interface
+├── 📂 Model # Data layer
+│   ├── States
+│   │   ├── PDFProcessingState.swift # Processing state
+│   │   └── LogEntry.swift # Logging model
+│   └── Errors
+│       └── FileError.swift # File operation errors
+├── 📂 ViewModel # Presentation layer
+│   └── PDFProcessingViewModel.swift # Main view model
+├── 📂 View # UI layer
 │   ├── ContentView.swift # Main container
 │   ├── PDFKitView.swift # PDF rendering
 │   ├── PDFRowView.swift # PDF comparison
 │   ├── PlaceholderView.swift # Empty state
-│   ├── ProcessingLogView.swift # Log display
-├── 📂 Service # Business logic
-│   ├── PDFProcessingService.swift # PDF processing
-│   ├── ImageProcessingService.swift # Image processing
-│   ├── FileService.swift # File operations
-├── 📂 Utility # Helper functions
-│   ├── FileAccessUtility.swift # File system access
+│   └── ProcessingLogView.swift # Log display
+├── 📂 Service # Business logic layer
+│   ├── PDF
+│   │   ├── PDFProcessingService.swift # PDF processing
+│   │   └── PDFProcessingServiceProtocol.swift # Service interface
+│   ├── Image
+│   │   ├── ImageProcessingService.swift # Image processing
+│   │   └── ImageProcessingServiceProtocol.swift # Service interface
+│   └── File
+│       ├── FileService.swift # File operations
+│       ├── FileServiceProtocol.swift # Service interface
+│       └── FileDirectory.swift # Directory types
+├── 📂 Utility # Support layer
+│   └── FileAccessUtility.swift # File system access
 ├── 📂 Tests
 │   ├── ImageProcessingTests.swift # Image processing tests
 │   ├── PDFProcessingTests.swift # PDF processing tests
@@ -73,15 +83,16 @@ The project follows an extended **Model-View-ViewModel** architecture with addit
 - SwiftUI (User Interface)
 - PDFKit (PDF handling)
 - Vision Framework (Image analysis)
+- Combine Framework
 - XCTest (Testing)
 
 ## 🧪 Testing
 The project includes comprehensive test coverage:
 
-- Unit tests for image processing
-- Unit tests for PDF processing
-- UI automation tests
-- Performance tests
+- Unit tests for services
+- ViewModel tests
+- Integration tests
+- UI tests
 
 ## 📜 License
 This project is licensed under the MIT License.
@@ -90,8 +101,9 @@ This project is licensed under the MIT License.
 Original PDF    Processed PDF
 
 ## 💡 Developer
-Author: [Your Name]
-Contact: [Your email or GitHub]
+Author: Aleksandr Meshchenko
+Contact: alex.meshchenko@gmail.com
+GitHub: @alexmeshchenko
 
 ## 📢 Future Plans
 🔹 Dark mode support

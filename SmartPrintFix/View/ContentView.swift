@@ -27,10 +27,13 @@ struct ContentView: View {
                 onDropHandler: viewModel.handleDrop,
                 isProcessing: viewModel.state.isProcessing,
                 onImport: viewModel.importPDF,
-                onExport: viewModel.exportPDF
+                onExport: viewModel.handleExport
             )
             
-            ProcessingLogView(logMessages: .constant(viewModel.state.logMessages))
+            ProcessingLogView(
+                logMessages: viewModel.state.logMessages,
+                onClear: viewModel.clearLogs
+            )
         }
         .padding()
         .fileImporter(

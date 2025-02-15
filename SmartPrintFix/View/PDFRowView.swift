@@ -27,7 +27,7 @@ struct PDFRowView: View {
     let onDropHandler: ([NSItemProvider]) -> Bool
     let isProcessing: Bool
     let onImport: () -> Void
-    let onExport: () -> Void
+    let onExport: (ExportAction) -> Void
     
     var body: some View {
         VStack(spacing: Constants.spacing) {
@@ -68,11 +68,19 @@ struct PDFRowView: View {
     private var processedDocumentToolbar: some View {
         HStack {
             Spacer()
-            Button("Export", action: onExport)
-                .disabled(processedDocument == nil)
+            ExportButton(
+                isEnabled: processedDocument != nil,
+                onAction: { action in
+                    showingPopover = false  // Close the popover before performing the action
+                    onExport(action)
+                },
+                showingPopover: $showingPopover
+            )
         }
         .frame(maxWidth: .infinity)
     }
+
+    @State private var showingPopover = false 
     
     // MARK: - Document Views
     

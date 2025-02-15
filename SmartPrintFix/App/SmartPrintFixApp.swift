@@ -9,18 +9,19 @@ import SwiftUI
 
 @main
 struct SmartPrintFixApp: App {
-    // Инициализируем зависимости на уровне приложения
+    // Initialize dependencies at the application level
     /*
-     Порядок импорта зависимостей важен:
+     The order of dependency imports is important:
 
-     Сначала создаются базовые сервисы (ImageProcessingService, FileService)
-     Затем сервисы, которые зависят от базовых (PDFProcessingService)
+     First, the basic services are created (ImageProcessingService, FileService).
+     Then, services that depend on the basic ones are created (PDFProcessingService).
      */
+
     private let dependencies = AppDependencies.shared
     
     var body: some Scene {
         WindowGroup {
-            //В конце инициализируется ViewModel, который использует все сервис
+            // Finally, the ViewModel is initialized, which uses all the services
             ContentView(dependencies: dependencies)
         }
     }

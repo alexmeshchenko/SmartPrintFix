@@ -7,7 +7,9 @@
 import SwiftUI
 
 struct ProcessingLogView: View {
-    @Binding var logMessages: [LogEntry]
+    var logMessages: [LogEntry]
+    let onClear: () -> Void
+    
     @State private var isHoveringOverClear = false
     
     private enum Constants {
@@ -66,7 +68,7 @@ private extension ProcessingLogView {
     @ViewBuilder
     var clearButtonView: some View {
         if !logMessages.isEmpty {
-            Button(action: { logMessages.removeAll() }) {
+            Button(action: onClear) {
                 Text("Clear")
                     .font(.system(size: Constants.ClearButton.fontSize))
                     .foregroundColor(isHoveringOverClear ? .black : .gray)
