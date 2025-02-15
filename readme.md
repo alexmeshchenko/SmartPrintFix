@@ -14,34 +14,42 @@ It **inverts dark areas** in PDFs (such as code blocks with dark backgrounds) to
 ✅ Drag and drop support,
 ✅ Real-time processing status.
 
-## 🏗️ Architecture (MVSU)
-The project follows the **Model-View-Service-Utility (MVSU)** architecture:
+## 🏗️ Architecture (MVVM + Service-UtilityU)
+The project follows an extended **Model-View-ViewModel** architecture with additional Service and Utility layers:
 
 📂 SmartPrintFix 
+├── 📂 App # Application root
+│   ├── AppDependencies.swift # Dependency container
+│   ├── SmartPrintFixApp.swift # Entry point
 ├── 📂 Model # Application state and data models
 │   ├── PDFProcessingState.swift # Processing state management
 │   ├── LogEntry.swift # Logging system model
+├── 📂 ViewModel
+│   ├── PDFProcessingViewModel.swift # Main view model
 ├── 📂 View # SwiftUI Interface
-│   ├── ContentView.swift # Main view container
-│   ├── PDFKitView.swift # PDF rendering view
-│   ├── PDFRowView.swift # PDF comparison view
-│   ├── ProcessingLogView.swift # Log display view
-├── 📂 Service # Core business logic
-│   ├── PDFProcessingService.swift # PDF document processing
-│   ├── ImageProcessingService.swift # Image analysis and conversion
-├── 📂 Utility # Support functions
-│   ├── FileAccessUtility.swift # File system operations
-│   ├── SmartPrintFixApp.swift # Application entry point
+│   ├── ContentView.swift # Main container
+│   ├── PDFKitView.swift # PDF rendering
+│   ├── PDFRowView.swift # PDF comparison
+│   ├── PlaceholderView.swift # Empty state
+│   ├── ProcessingLogView.swift # Log display
+├── 📂 Service # Business logic
+│   ├── PDFProcessingService.swift # PDF processing
+│   ├── ImageProcessingService.swift # Image processing
+│   ├── FileService.swift # File operations
+├── 📂 Utility # Helper functions
+│   ├── FileAccessUtility.swift # File system access
 ├── 📂 Tests
 │   ├── ImageProcessingTests.swift # Image processing tests
 │   ├── PDFProcessingTests.swift # PDF processing tests
 │   ├── UITests # UI automation tests
 
 ### Architecture Details
-- **Model**: Handles state management and data structures
-- **View**: SwiftUI-based user interface components
+- **App**: Application configuration and dependency injection
+- **Model**: Pure data models and state definitions
+- **ViewModel**: Presentation logic and state management
+- **View**: SwiftUI interface components
 - **Service**: Core business logic and processing
-- **Utility**: Helper functions and system interactions
+- **Utility**: Support functions and system interactions
 
 ## 💻 System Requirements
 - macOS 14.0 (Sonoma) or later

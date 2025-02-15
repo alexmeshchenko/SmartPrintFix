@@ -103,6 +103,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 793BC37E2D54E04900512AAA /* Build configuration list for PBXNativeTarget "SmartPrintFix" */;
 			buildPhases = (
+				7912ABAB2D5FE9CF0076D665 /* ShellScript */,
 				793BC3552D54E04600512AAA /* Sources */,
 				793BC3562D54E04600512AAA /* Frameworks */,
 				793BC3572D54E04600512AAA /* Resources */,
@@ -199,6 +200,8 @@
 			);
 			mainGroup = 793BC3502D54E04600512AAA;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 793BC35A2D54E04600512AAA /* Products */;
 			projectDirPath = "";
@@ -234,6 +237,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		7912ABAB2D5FE9CF0076D665 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif [ -f \"${BUILD_DIR%Build/*}SourcePackages/checkouts/SwiftLint/swiftlint\" ]; then\n    \"${BUILD_DIR%Build/*}SourcePackages/checkouts/SwiftLint/swiftlint\"\nelse\n    echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		793BC3552D54E04600512AAA /* Sources */ = {
