@@ -28,8 +28,19 @@
 		793BC36A2D54E04900512AAA /* SmartPrintFixTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SmartPrintFixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		793BC3742D54E04900512AAA /* SmartPrintFixUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SmartPrintFixUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		799C96382D56C21E00FC09BA /* readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = readme.md; sourceTree = "<group>"; };
+		79A060232D6162CF00D2C92F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		79BD8D862D5DFEE800C6EF81 /* SmartPrintFix.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = SmartPrintFix.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		79A7A5352D6255FD00EA8D95 /* Exceptions for "SmartPrintFixHelp" folder in "SmartPrintFix" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 793BC3582D54E04600512AAA /* SmartPrintFix */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		793BC35B2D54E04600512AAA /* SmartPrintFix */ = {
@@ -45,6 +56,14 @@
 		793BC3772D54E04900512AAA /* SmartPrintFixUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = SmartPrintFixUITests;
+			sourceTree = "<group>";
+		};
+		79A7A5322D62555400EA8D95 /* SmartPrintFixHelp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				79A7A5352D6255FD00EA8D95 /* Exceptions for "SmartPrintFixHelp" folder in "SmartPrintFix" target */,
+			);
+			path = SmartPrintFixHelp;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -77,6 +96,8 @@
 		793BC3502D54E04600512AAA = {
 			isa = PBXGroup;
 			children = (
+				79A7A5322D62555400EA8D95 /* SmartPrintFixHelp */,
+				79A060232D6162CF00D2C92F /* Info.plist */,
 				79BD8D862D5DFEE800C6EF81 /* SmartPrintFix.xctestplan */,
 				799C96382D56C21E00FC09BA /* readme.md */,
 				793BC35B2D54E04600512AAA /* SmartPrintFix */,
@@ -114,6 +135,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				793BC35B2D54E04600512AAA /* SmartPrintFix */,
+				79A7A5322D62555400EA8D95 /* SmartPrintFixHelp */,
 			);
 			name = SmartPrintFix;
 			packageProductDependencies = (
@@ -428,6 +450,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -456,6 +479,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (

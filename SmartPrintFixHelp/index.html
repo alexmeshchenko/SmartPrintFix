@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPrintFix Help</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1, h2, h3 {
+            color: #000;
+            margin-top: 30px;
+        }
+        
+        h1 {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .feature {
+            background: #f5f5f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .tip {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        kbd {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 2px 5px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>SmartPrintFix Help</h1>
+    
+    <h2>Overview</h2>
+    <p>SmartPrintFix is a macOS application that automatically processes PDF documents before printing. It inverts dark areas in PDFs (such as code blocks with dark backgrounds) to make them more printer-friendly when printing on light paper.</p>
+    
+    <h2>Getting Started</h2>
+    <div class="feature">
+        <h3>Loading a PDF</h3>
+        <p>There are two ways to load a PDF:</p>
+        <ul>
+            <li>Click the "Import" button and select a PDF file</li>
+            <li>Drag and drop a PDF file directly into the application window</li>
+        </ul>
+    </div>
+    
+    <h2>Features</h2>
+    
+    <div class="feature">
+        <h3>Export Options</h3>
+        <p>Click the "Export" button to access the following options:</p>
+        <ul>
+            <li><strong>Preview</strong> (<kbd>⇧⌘P</kbd>) - Open the processed PDF in Preview</li>
+            <li><strong>Print</strong> (<kbd>⌘P</kbd>) - Print the processed PDF</li>
+            <li><strong>Save PDF</strong> (<kbd>⌘S</kbd>) - Save the processed PDF to disk</li>
+        </ul>
+    </div>
+    
+    <div class="feature">
+        <h3>Processing Log</h3>
+        <p>The processing log at the bottom of the window shows the history of operations:</p>
+        <ul>
+            <li>ℹ️ Info messages - General information</li>
+            <li>⚠️ Warning messages - Non-critical issues</li>
+            <li>❌ Error messages - Processing failures</li>
+            <li>✅ Success messages - Completed operations</li>
+        </ul>
+        <p>Click "Clear" to reset the log.</p>
+    </div>
+    
+    <h2>Tips & Tricks</h2>
+    <div class="tip">
+        <h3>For Best Results</h3>
+        <ul>
+            <li>Ensure your PDF contains clear contrast between text and background</li>
+            <li>Preview the processed document before printing</li>
+            <li>Check the processing log for any warnings or errors</li>
+        </ul>
+    </div>
+    
+    <h2>Troubleshooting</h2>
+    <div class="feature">
+        <h3>Common Issues</h3>
+        <ul>
+            <li><strong>PDF won't load:</strong> Make sure the file isn't corrupted and you have permission to access it</li>
+            <li><strong>Processing fails:</strong> Check the log for specific error messages</li>
+            <li><strong>Printing issues:</strong> Ensure you have a printer configured in System Settings</li>
+        </ul>
+    </div>
+    
+    <h2>System Requirements</h2>
+    <ul>
+        <li>macOS 14.0 (Sonoma) or later</li>
+        <li>Apple Silicon or Intel processor</li>
+    </ul>
+    
+    <footer style="margin-top: 50px; border-top: 1px solid #ddd; padding-top: 20px;">
+        <p>For more information or support, contact us at <a href="mailto:alex.meshchenko@gmail.com">alex.meshchenko@gmail.com</a></p>
+    </footer>
+</body>
+</html>
