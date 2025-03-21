@@ -14,9 +14,9 @@ It **inverts dark areas** in PDFs (such as code blocks with dark backgrounds) to
 ✅ Drag and drop support,
 ✅ Real-time processing status.
 
-## 🏗️ Architecture (MVVM + Service-UtilityU)
+## 🏗️ Architecture (MVVM + Service-Utility)
 The project follows an extended **Model-View-ViewModel** architecture with additional Service and Utility layers:
-
+```
 📂 SmartPrintFix
 ├── 📂 App # Application root
 │   ├── AppDependencies.swift # Dependency container
@@ -51,7 +51,8 @@ The project follows an extended **Model-View-ViewModel** architecture with addit
 ├── 📂 Tests
 │   ├── ImageProcessingTests.swift # Image processing tests
 │   ├── PDFProcessingTests.swift # PDF processing tests
-│   ├── UITests # UI automation tests
+│   └── UITests # UI automation tests
+```
 
 ### Architecture Details
 - **App**: Application configuration and dependency injection
