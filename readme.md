@@ -108,8 +108,13 @@ GitHub: @alexmeshchenko
 
 ## 📢 Future Plans
 🔹 Dark mode support
+
 🔹 Add OCR to recognize text in code sections
+
 🔹 Integrate with Quick Look for previewing PDFs
+
 🔹 Batch processing support
+
 🔹 Processing presets
+
 🔹 Export/Import settings
