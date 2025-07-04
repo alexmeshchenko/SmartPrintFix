@@ -11,7 +11,7 @@ It **inverts dark areas** in PDFs (such as code blocks with dark backgrounds) to
 ✅ View **both original and processed PDFs** side by side,  
 ✅ Save processed PDFs,  
 ✅ Maintain a **processing log**,  
-✅ Drag and drop support,
+✅ Drag and drop support,  
 ✅ Real-time processing status.
 
 ## 🏗️ Architecture (MVVM + Service-Utility)
@@ -107,14 +107,9 @@ Contact: alex.meshchenko@gmail.com
 GitHub: @alexmeshchenko
 
 ## 📢 Future Plans
-🔹 Dark mode support
-
-🔹 Add OCR to recognize text in code sections
-
-🔹 Integrate with Quick Look for previewing PDFs
-
-🔹 Batch processing support
-
-🔹 Processing presets
-
+🔹 Dark mode support  
+🔹 Add OCR to recognize text in code sections  
+🔹 Integrate with Quick Look for previewing PDFs  
+🔹 Batch processing support  
+🔹 Processing presets  
 🔹 Export/Import settings
