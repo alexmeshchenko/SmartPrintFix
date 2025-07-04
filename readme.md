@@ -102,8 +102,8 @@ This project is licensed under the MIT License.
 Original PDF    Processed PDF
 
 ## 💡 Developer
-Author: Aleksandr Meshchenko
-Contact: alex.meshchenko@gmail.com
+Author: Aleksandr Meshchenko  
+Contact: alex.meshchenko@gmail.com  
 GitHub: @alexmeshchenko
 
 ## 📢 Future Plans
